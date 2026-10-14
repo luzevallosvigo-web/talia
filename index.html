@@ -293,20 +293,36 @@ function pickVoice() {
 }
 if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 
-// One shared <audio> element, unlocked by the first tap, so iPhone allows later playback (and plays even in silent mode).
+// One shared <audio> element, unlocked by the first speaker tap, so iPhone allows later playback.
+// Audio is only claimed when a speaker is tapped: opening the app, typing and chatting never touch it,
+// so other apps (Spotify, podcasts) keep playing. The tap pauses them, the voice plays (also in silent mode),
+// and when the voice ends the audio is released again.
 const player = new Audio();
 player.preload = "auto";
 const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
-let unlocked = false;
-function unlockPlayer() {
-  if (actx && actx.state !== "running") actx.resume().catch(() => {});
-  if (unlocked) return;
+let unlocked = false, claimed = false, releaseTimer = null;
+// Called only from a speaker tap (a user gesture, which iPhone requires).
+function claimAudio() {
+  clearTimeout(releaseTimer);
+  claimed = true;
+  // iPhone: play even with the silent switch on (Safari 17+)
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
   audioCtx();
+  if (unlocked) return;
   unlocked = true;
   try { player.src = SILENT_WAV; const pr = player.play(); if (pr) pr.catch(() => { unlocked = false; }); } catch { unlocked = false; }
 }
-document.addEventListener("touchend", unlockPlayer, { capture: true, passive: true });
-document.addEventListener("click", unlockPlayer, { capture: true });
+// When the voice has finished (or was stopped): suspend the audio engine and hand the audio back.
+function releaseAudio() {
+  clearTimeout(releaseTimer);
+  if (!claimed) return;
+  releaseTimer = setTimeout(() => {
+    if (!player.paused && !player.ended) return;
+    claimed = false;
+    if (actx && actx.state === "running") actx.suspend().catch(() => {});
+    try { if (navigator.audioSession) navigator.audioSession.type = "auto"; } catch {}
+  }, 400);
+}
 
 let actx = null;
 function audioCtx() {
@@ -314,8 +330,6 @@ function audioCtx() {
     const C = window.AudioContext || window.webkitAudioContext;
     if (!C) return null;
     try { actx = new C(); } catch { return null; }
-    // iPhone: play even with the silent switch on (Safari 17+)
-    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
   }
   if (actx.state === "suspended") actx.resume().catch(() => {});
   return actx;
@@ -340,13 +354,16 @@ function stopAudio() {
   for (const src of liveSources) { try { src.onended = null; src.stop(); } catch {} }
   liveSources = [];
   document.querySelectorAll(".playing,.loading").forEach(b => b.classList.remove("playing", "loading"));
+  releaseAudio();
 }
 function deviceSpeak(text, btn) {
   if (!("speechSynthesis" in window)) { toast("Este dispositivo no puede reproducir audio."); return; }
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "it-IT"; if (itVoice) u.voice = itVoice;
   u.rate = settings.slow ? 0.72 : 0.95;
-  if (btn) { btn.classList.add("playing"); const off = () => btn.classList.remove("playing"); u.onend = off; u.onerror = off; }
+  if (btn) btn.classList.add("playing");
+  const off = () => { if (btn) btn.classList.remove("playing"); releaseAudio(); };
+  u.onend = off; u.onerror = off;
   setTimeout(() => speechSynthesis.speak(u), 60);
 }
 const audioUrls = new Map();
@@ -357,7 +374,8 @@ function playBlob(key, blob, btn, text) {
   const rate = settings.slow ? 0.8 : 1;
   try { player.preservesPitch = true; player.webkitPreservesPitch = true; } catch {}
   player.defaultPlaybackRate = rate; player.playbackRate = rate;
-  if (btn) { btn.classList.add("playing"); player.onended = player.onerror = () => btn.classList.remove("playing"); }
+  if (btn) btn.classList.add("playing");
+  player.onended = player.onerror = () => { if (btn) btn.classList.remove("playing"); releaseAudio(); };
   const pr = player.play();
   if (pr) pr.then(() => { player.playbackRate = rate; }).catch(() => { if (btn) btn.classList.remove("playing"); deviceSpeak(text, btn); });
 }
@@ -379,8 +397,8 @@ async function speak(text, btn, opts = {}) {
   stopAudio();
   if (wasActive || !text) return;
   const token = speakToken;
+  claimAudio();
   if (!naturalOn()) { deviceSpeak(text, btn); return; }
-  unlockPlayer();
   const v = opts.voice;
   const key = ttsKey(text, v);
   try {
@@ -652,7 +670,7 @@ async function streamTTS(text, signal, token, onStart, btn, v, model = cfg.gemin
   if (buf.trim()) handleEvent(buf);
   if (!all.length) throw { code: "empty_completion" };
   if (pend.length) schedule(cleanPcm(pend, rate, { fadeIn: firstOut }));
-  if (last && btn) last.onended = () => { if (token === speakToken) btn.classList.remove("playing"); };
+  if (last) last.onended = () => { if (token === speakToken) { if (btn) btn.classList.remove("playing"); releaseAudio(); } };
   return new Blob([pcmToWav(cleanPcm(concatBytes(all), rate), rate)], { type: "audio/wav" });
 }
 
