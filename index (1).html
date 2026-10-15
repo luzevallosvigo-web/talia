@@ -1,0 +1,1836 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#D12A20">
+<title>Talia</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Talia">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --paper:#FFFFFF; --ink:#1D1D1B; --muted:#6E6C66; --line:#E4E2DC; --soft:#F2F1ED;
+  --red:#D12A20; --green:#14803C; --yellow:#F7BE00; --blue:#0057B8; --lilac:#874A9E;
+  --on-dark:#FFFFFF; --on-yellow:#1D1D1B;
+  --ok:#14803C; --warn:#B7791F; --bad:#D12A20;
+  --hl:#DCEFE3; --strike:#FBE4E1; --focus:#0057B8;
+  --serif:'Literata',Georgia,'Times New Roman',serif;
+  --cond:'Barlow Semi Condensed','Arial Narrow',system-ui,sans-serif;
+  --sans:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17181A; --ink:#ECEBE6; --muted:#9E9D97; --line:#2F3034; --soft:#232428;
+    --red:#E0493F; --green:#2E9A57; --blue:#3D7BD1; --lilac:#A56BBB; --ok:#4FB078; --bad:#E06A5E; --warn:#D9A040;
+    --hl:#1E3B2A; --strike:#40231F; --focus:#8FB3F0;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17181A; --ink:#ECEBE6; --muted:#9E9D97; --line:#2F3034; --soft:#232428;
+  --red:#E0493F; --green:#2E9A57; --blue:#3D7BD1; --lilac:#A56BBB; --ok:#4FB078; --bad:#E06A5E; --warn:#D9A040;
+  --hl:#1E3B2A; --strike:#40231F; --focus:#8FB3F0;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{height:100%;margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.5 var(--sans)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:default}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.muted{color:var(--muted)} .small{font-size:14px}
+[hidden]{display:none !important}
+
+#app{height:100%}
+.screen{height:100%;max-width:680px;margin:0 auto;display:flex;flex-direction:column}
+
+/* Home */
+#home{display:block;overflow-y:auto;padding:28px 18px 36px}
+.brand{font-family:var(--cond);font-weight:700;font-size:76px;line-height:.88;letter-spacing:-.015em;margin:0}
+.hello{font-family:var(--serif);font-size:19px;line-height:1.45;margin:12px 0 26px;color:var(--muted)}
+.hello b{color:var(--ink);font-weight:500}
+.book{display:block;width:100%;text-align:left;border:0;padding:11px;margin:0 0 12px;border-radius:3px;background:var(--c);color:var(--on)}
+.book .frame{display:block;border:1.5px solid currentColor;padding:14px 16px 16px}
+.book .t{font-family:var(--cond);font-weight:700;font-size:34px;line-height:1;display:block}
+.book .it{font-family:var(--serif);font-style:italic;font-size:16px;display:block;margin:9px 0 1px}
+.book .es{font-size:14px;opacity:.85;display:block}
+.book:active{transform:translateY(1px)}
+.settings{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.field{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.field label,.field span{font-weight:500}
+.field input{width:150px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:4px 12px;border-radius:999px;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.note{font-size:14px;color:var(--muted);margin:0}
+.field.stack{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;justify-content:stretch}
+.field.stack input{width:100%}
+.keyrow{display:flex;gap:6px}
+.keyrow input,.keyrow select{flex:1;min-width:0}
+.vsel{border:1px solid var(--line);border-radius:999px;padding:7px 12px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)}
+.say.loading,.ghost.loading{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.say.loading,.ghost.loading{animation:none;opacity:.5}}
+.status{font-size:14px;margin:0}
+.status.ok{color:var(--ok)} .status.bad{color:var(--bad)}
+.settings h2{font-family:var(--cond);font-weight:700;font-size:24px;margin:0}
+.settings a{color:var(--ink)}
+.err .detail{font-size:13px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.banner{background:var(--soft);border-left:3px solid var(--bad);padding:10px 12px;margin:0 0 18px;font-size:15px}
+
+/* Module chrome */
+.bar{flex:none;background:var(--c);color:var(--on);padding:6px 16px 14px}
+.bar .row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px}
+.back{border:0;background:none;padding:6px 8px 6px 0;font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:2px}
+.tools{display:flex;gap:6px;align-items:center}
+.pill{border:1.5px solid currentColor;background:none;border-radius:999px;padding:3px 11px;font-size:13px;font-weight:600}
+.pill[aria-pressed="true"]{background:var(--on);color:var(--c)}
+.bar h1{font-family:var(--cond);font-weight:700;font-size:32px;line-height:1.02;margin:2px 0 0}
+.bar p{margin:3px 0 0;font-size:14px;opacity:.88}
+.feed{flex:1;min-height:0;overflow-y:auto;padding:6px 16px 24px;overscroll-behavior:contain}
+.empty{color:var(--muted);text-align:center;padding:44px 12px;font-size:15px}
+.empty .big{font-family:var(--serif);font-style:italic;font-size:21px;color:var(--ink);display:block;margin-bottom:6px}
+
+.composer{flex:none;border-top:1px solid var(--line);background:var(--paper);padding:10px 12px;display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line);border-radius:21px;padding:9px 15px;font:inherit;font-size:16px;line-height:1.4;max-height:140px;background:var(--paper);color:var(--ink)}
+.composer textarea:disabled{background:var(--soft)}
+.send,.mic{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;padding:0}
+.send{border:0;background:var(--c);color:var(--on)}
+.send:disabled{opacity:.35}
+.send .i-stop{display:none}.send.stop .i-send{display:none}.send.stop .i-stop{display:grid}
+.mic{border:1px solid var(--line);background:none}
+.mic.rec{background:var(--bad);border-color:var(--bad);color:#fff}
+.ic,.send span{display:grid;place-items:center}
+.strip{flex:none;display:flex;align-items:center;gap:10px;padding:8px 12px 0;font-size:14px;color:var(--muted)}
+
+/* Turns */
+.turn{padding:12px 0 18px;border-bottom:1px solid var(--line)}
+.turn:last-child{border-bottom:0}
+.qrow{display:flex;justify-content:flex-end;margin:4px 0 12px}
+.qbubble{background:var(--soft);border-radius:16px;padding:6px 14px;max-width:85%;overflow-wrap:anywhere}
+.qbubble.it{font-family:var(--serif)}
+.line{margin:0 0 10px;overflow-wrap:anywhere}
+.lbl{font-weight:600}
+.it-text{font-family:var(--serif);font-style:italic;font-size:17px}
+.it-big{font-family:var(--serif);font-size:21px;line-height:1.45}
+.bd{margin:6px 0 12px;padding-left:20px}
+.bd li{margin:0 0 7px}
+.frag{font-family:var(--serif);font-weight:500;border:0;background:none;padding:0;text-align:left;text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:3px}
+.func{color:var(--muted)}
+.say{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--paper);display:inline-grid;place-items:center;vertical-align:-8px;padding:0;color:var(--ink)}
+.say.playing,.frag.playing{color:var(--focus);border-color:var(--focus)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:none;border-radius:999px;padding:5px 12px;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--c);color:var(--on);border-color:transparent}
+.primary{background:var(--c);color:var(--on);border:0;border-radius:999px;padding:10px 22px;font-weight:600;margin-top:18px}
+
+.verdict{display:inline-flex;align-items:center;gap:7px;font-weight:600;margin:0 0 10px;font-size:16px}
+.verdict .dot{width:11px;height:11px;border-radius:50%}
+.v-correct .dot{background:var(--ok)}.v-almost .dot{background:var(--warn)}.v-wrong .dot{background:var(--bad)}
+del.x{background:var(--strike);text-decoration:line-through;text-decoration-color:var(--bad);border-radius:2px;padding:0 2px}
+ins.x{background:var(--hl);text-decoration:none;border-radius:2px;padding:0 2px}
+.pair{border-left:3px solid var(--c);padding:2px 0 2px 12px;margin:4px 0 12px}
+.pair .line:last-child{margin-bottom:0}
+.errs{margin:0 0 12px;padding-left:20px;font-size:15px}
+.errs li{margin-bottom:5px}
+.tip{background:var(--soft);padding:9px 12px;border-radius:4px;font-size:15px;margin:0}
+
+.ghost{border:1px solid var(--line);background:none;border-radius:999px;padding:4px 12px;font-size:14px}
+
+/* Traduttore: structures (numbered in the order of the Milan Metro lines) */
+.lit{color:var(--muted);font-style:italic}
+.sect{font-family:var(--cond);font-weight:700;font-size:20px;margin:18px 0 8px}
+.st-0{--sc:var(--red);--sca:rgba(224,73,63,.3);--sct:#FFFFFF}
+.st-1{--sc:var(--green);--sca:rgba(46,154,87,.32);--sct:#FFFFFF}
+.st-2{--sc:var(--yellow);--sca:rgba(247,190,0,.42);--sct:#1D1D1B}
+.st-3{--sc:var(--blue);--sca:rgba(61,123,209,.32);--sct:#FFFFFF}
+mark.sm{background:var(--sca);color:inherit;border-radius:3px;padding:0 2px}
+.sn{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--sc);color:var(--sct);font:700 10px/1 var(--sans);font-style:normal;vertical-align:super;margin-left:2px}
+.st{border-left:3px solid var(--sc);padding:2px 0 2px 12px;margin:0 0 16px}
+.st-h{display:flex;align-items:center;gap:8px;font-weight:600;font-size:17px}
+.st-h .sn{vertical-align:baseline;margin:0;width:20px;height:20px;font-size:12px;flex:none}
+.pat{display:inline-block;font-family:var(--cond);font-weight:600;font-size:15px;background:var(--soft);border-radius:4px;padding:1px 8px;margin:6px 0 2px}
+.st-x{margin:4px 0 6px;font-size:15px}
+.ex{margin:0;padding-left:18px;font-size:15px}
+.ex li{margin:0 0 6px}
+.ex .frag{font-style:italic}
+
+/* Quattro chiacchiere */
+.msg{display:flex;flex-direction:column;margin:12px 0}
+.msg.her{align-items:flex-start}.msg.me{align-items:flex-end}
+.who{font-size:12px;color:var(--muted);margin:0 6px 3px}
+.bubble{max-width:86%;padding:9px 14px;border-radius:18px;font-family:var(--serif);font-size:17px;line-height:1.45;overflow-wrap:anywhere}
+.her .bubble{background:var(--soft);border-bottom-left-radius:5px}
+.me .bubble{background:var(--c);color:var(--on);border-bottom-right-radius:5px}
+.meta{display:flex;gap:6px;margin-top:5px;align-items:center}
+.mini{border:0;background:none;padding:2px 4px;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.tr{font-size:14px;color:var(--muted);margin-top:4px;max-width:86%}
+.fix{max-width:86%;font-size:14px;margin-top:7px;border-right:3px solid var(--yellow);padding:2px 10px;text-align:right}
+.fix .better{font-family:var(--serif);font-style:italic;font-size:15px;display:block;color:var(--ink)}
+.fix .why{color:var(--muted)}
+.start{padding:30px 2px}
+.start .big{font-family:var(--serif);font-size:22px;margin:0 0 4px}
+.msg.cont{margin-top:4px}
+.contacts{display:grid;gap:8px;margin:0 0 30px}
+.contact{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:14px;padding:4px 4px 4px 0}
+.crow{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;text-align:left;padding:6px 6px 6px 10px}
+.ava{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:var(--aon);font-family:var(--cond);font-weight:700;font-size:20px}
+.cinfo{flex:1;min-width:0;display:grid}
+.cinfo b{font-weight:600}
+.cprev{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctime{flex:none;font-size:12px;color:var(--muted);align-self:flex-start;padding-top:8px}
+.cdel{flex:none;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;width:34px;height:34px;border-radius:50%}
+.prof{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0 6px}
+.prof .ph{display:flex;align-items:center;gap:10px}
+.prof .ph div{display:grid}
+.prof .ph div span{font-size:14px;color:var(--muted)}
+.seen{font-size:12.5px;color:var(--muted);text-align:right;margin-top:3px}
+.qc-hint{text-align:center;margin:18px auto 6px;max-width:34ch}
+/* Settings: the "Su di me" text area */
+.field textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:8px 12px;font:inherit;font-size:16px;line-height:1.4;resize:vertical;background:var(--paper);color:var(--ink)}
+
+.thinking{color:var(--muted);font-size:15px;display:flex;align-items:center;gap:8px;padding:6px 0;flex-wrap:wrap}
+.dots{display:inline-flex;gap:3px}
+.dots i{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.dots i{animation:none;opacity:.6}}
+.err{border-left:3px solid var(--bad);padding:6px 12px;font-size:15px}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 15px;border-radius:18px;font-size:14px;max-width:90vw;z-index:9;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="home" class="screen" aria-label="Talia"></section>
+  <section id="trad" class="screen" hidden></section>
+  <section id="dottore" class="screen" hidden></section>
+  <section id="dillo" class="screen" hidden></section>
+  <section id="chiacchiere" class="screen" hidden></section>
+</div>
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+function h(tag, props, ...kids) {
+  const n = document.createElement(tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) {
+    if (c == null || c === false || c === "") continue;
+    n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return n;
+}
+const str = v => typeof v === "string" ? v.trim() : (v == null ? "" : String(v).trim());
+const arr = v => Array.isArray(v) ? v : [];
+const noDot = s => s.replace(/[.\s]+$/, "");
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("talia." + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("talia." + k, JSON.stringify(v)); } catch {} }
+};
+const settings = { name: store.get("name", "Axel"), slow: store.get("slow", false), level: store.get("level", "B2"), about: store.get("about", "") };
+const LEVELS = ["A2", "B1", "B2", "C1"];
+const lvl = () => LEVELS.includes(settings.level) ? settings.level : "B2";
+const lvlUp = () => ({ A2: "B1", B1: "B2", B2: "C1", C1: "C2" })[lvl()];
+const userName = () => (settings.name || "").trim() || "Axel";
+
+const ICON = {
+  speak: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>',
+  send: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>',
+  mic: '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>',
+  back: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>'
+};
+
+let toastTimer;
+function toast(msg) {
+  let t = $(".toast");
+  if (!t) { t = h("div", { class: "toast", role: "status" }); document.body.append(t); }
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 4500);
+}
+function thinking(label = "Sto pensando") {
+  const hint = h("span", { class: "small", hidden: true, text: "(a veces tarda hasta un minuto)" });
+  const node = h("div", { class: "thinking" }, label, h("span", { class: "dots" }, h("i"), h("i"), h("i")), hint);
+  setTimeout(() => { if (node.isConnected) hint.hidden = false; }, 9000);
+  return node;
+}
+const toEnd = feed => requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
+const toTop = (feed, node) => requestAnimationFrame(() => { feed.scrollTop = Math.max(0, node.offsetTop - feed.offsetTop - 8); });
+
+/* ---------- speech ---------- */
+// Natural voices come from Gemini's text-to-speech models; the device voice is the free, offline fallback.
+const GEMINI_VOICES = [
+  ["Kore", "Kore (femminile, chiara)"], ["Aoede", "Aoede (femminile, disinvolta)"], ["Leda", "Leda (femminile, giovane)"],
+  ["Sulafat", "Sulafat (femminile, calda)"], ["Charon", "Charon (maschile, calma)"], ["Iapetus", "Iapetus (maschile, chiara)"],
+  ["Puck", "Puck (maschile, allegra)"]
+];
+settings.voice = store.get("voice", "g:Kore");
+let itVoices = [];
+let itVoice = null;
+function pickVoice() {
+  const vs = speechSynthesis.getVoices();
+  itVoices = vs.filter(v => /^it/i.test(v.lang));
+  const chosen = settings.voice.startsWith("d:") ? itVoices.find(v => v.voiceURI === settings.voice.slice(2)) : null;
+  itVoice = chosen
+    || itVoices.find(v => /^it[-_]IT/i.test(v.lang) && /google|natural|premium|enhanced|neural|siri/i.test(v.name + " " + v.voiceURI))
+    || itVoices.find(v => /^it[-_]IT/i.test(v.lang)) || itVoices[0] || null;
+  document.dispatchEvent(new Event("talia-voices"));
+}
+if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+
+// One shared <audio> element, unlocked by the first speaker tap, so iPhone allows later playback.
+// Talia never pauses other apps: on a speaker tap the audio session is set to "ambient", so the voice is
+// mixed on top of Spotify or a podcast, which keep playing. iPhone mutes ambient audio while the silent
+// switch is on. Opening the app, typing and chatting never touch the audio at all.
+// It stays "ambient" after the voice ends: switching back to "auto" while iOS still holds the audio could
+// turn it into normal playback and pause the music a moment later. Only dictation switches it to "auto".
+const mixAudio = () => { try { if (navigator.audioSession && navigator.audioSession.type !== "ambient") navigator.audioSession.type = "ambient"; } catch {} };
+const micAudio = () => { try { if (navigator.audioSession) navigator.audioSession.type = "auto"; } catch {} };
+const player = new Audio();
+player.preload = "auto";
+const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
+let unlocked = false, claimed = false, releaseTimer = null;
+// Called only from a speaker tap (a user gesture, which iPhone requires).
+function claimAudio() {
+  clearTimeout(releaseTimer);
+  claimed = true;
+  // iPhone (Safari 17+): mix with the music instead of pausing it. Set before anything starts playing.
+  mixAudio();
+  audioCtx();
+  if (unlocked) return;
+  unlocked = true;
+  try { player.src = SILENT_WAV; const pr = player.play(); if (pr) pr.catch(() => { unlocked = false; }); } catch { unlocked = false; }
+}
+// When the voice has finished (or was stopped): suspend the audio engine (the session stays "ambient").
+function releaseAudio() {
+  clearTimeout(releaseTimer);
+  if (!claimed) return;
+  releaseTimer = setTimeout(() => {
+    if (!player.paused && !player.ended) return;
+    claimed = false;
+    if (actx && actx.state === "running") actx.suspend().catch(() => {});
+  }, 400);
+}
+
+let actx = null;
+function audioCtx() {
+  if (!actx) {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    try { actx = new C(); } catch { return null; }
+  }
+  if (actx.state === "suspended") actx.resume().catch(() => {});
+  return actx;
+}
+
+let speakToken = 0, ttsNotice = false, streamUnsupported = false;
+// Natural voice: the selected TTS model first, then the other one as a backup (each model has its own free quota).
+// A model that hits its limit pauses for a minute; only when every model is paused does the device voice take over.
+const TTS_MODELS = ["gemini-3.8-flash-lite-tts", "gemini-3.8-flash-tts"];
+const TTS_PAUSE = 60 * 1000;
+const ttsPausedUntil = {};
+const ttsChain = () => [cfg.gemini.tts, ...TTS_MODELS.filter(m => m !== cfg.gemini.tts)];
+const ttsModel = () => ttsChain().find(m => Date.now() > (ttsPausedUntil[m] || 0));
+const pauseTts = (m, ms = TTS_PAUSE) => { ttsPausedUntil[m] = Date.now() + ms; };
+const resetTts = () => { for (const k of Object.keys(ttsPausedUntil)) delete ttsPausedUntil[k]; ttsNotice = false; };
+let liveSources = [], liveCtl = null;
+function stopAudio() {
+  speakToken++;
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  try { player.pause(); } catch {}
+  if (liveCtl) { try { liveCtl.abort(); } catch {} liveCtl = null; }
+  for (const src of liveSources) { try { src.onended = null; src.stop(); } catch {} }
+  liveSources = [];
+  document.querySelectorAll(".playing,.loading").forEach(b => b.classList.remove("playing", "loading"));
+  releaseAudio();
+}
+function deviceSpeak(text, btn) {
+  if (!("speechSynthesis" in window)) { toast("Este dispositivo no puede reproducir audio."); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "it-IT"; if (itVoice) u.voice = itVoice;
+  u.rate = settings.slow ? 0.72 : 0.95;
+  if (btn) btn.classList.add("playing");
+  const off = () => { if (btn) btn.classList.remove("playing"); releaseAudio(); };
+  u.onend = off; u.onerror = off;
+  setTimeout(() => speechSynthesis.speak(u), 60);
+}
+const audioUrls = new Map();
+function playBlob(key, blob, btn, text) {
+  let url = audioUrls.get(key);
+  if (!url) { url = URL.createObjectURL(blob); audioUrls.set(key, url); }
+  player.src = url;
+  const rate = settings.slow ? 0.8 : 1;
+  try { player.preservesPitch = true; player.webkitPreservesPitch = true; } catch {}
+  player.defaultPlaybackRate = rate; player.playbackRate = rate;
+  if (btn) btn.classList.add("playing");
+  player.onended = player.onerror = () => { if (btn) btn.classList.remove("playing"); releaseAudio(); };
+  const pr = player.play();
+  if (pr) pr.then(() => { player.playbackRate = rate; }).catch(() => { if (btn) btn.classList.remove("playing"); deviceSpeak(text, btn); });
+}
+const naturalOn = () => settings.voice.startsWith("g:") && cfg.provider === "gemini" && !!cfg.gemini.key && !!ttsModel();
+// Natural-voice name: the Settings voice, or a per-girl voice in Quattro chiacchiere (only when a Gemini voice is selected).
+const voiceName = v => (v && settings.voice.startsWith("g:")) ? v : settings.voice.slice(2);
+// The cache key does not depend on the model, so audio from either model is reused.
+const ttsKey = (text, v) => `v1|${voiceName(v)}|${text}`;
+async function cachedAudio(text, v) {
+  return idbGet(ttsKey(text, v));
+}
+const pendingAudio = new Map();
+
+// Emojis are shown in the chat but never read aloud.
+const speechText = t => String(t || "").replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, "").replace(/\s{2,}/g, " ").trim();
+async function speak(text, btn, opts = {}) {
+  text = speechText(text);
+  const wasActive = btn && (btn.classList.contains("playing") || btn.classList.contains("loading"));
+  stopAudio();
+  if (wasActive || !text) return;
+  const token = speakToken;
+  claimAudio();
+  if (!naturalOn()) { deviceSpeak(text, btn); return; }
+  const v = opts.voice;
+  const key = ttsKey(text, v);
+  try {
+    let blob = await cachedAudio(text, v);
+    if (!blob && pendingAudio.has(key)) {
+      if (btn) btn.classList.add("loading");
+      try { blob = await withTimeout(pendingAudio.get(key), 20000); }
+      catch (e) { if (!(e && (e.code === "rate_limited" || e.code === "model_not_found"))) throw e; blob = null; }
+    }
+    if (token !== speakToken) return;
+    if (blob) { if (btn) btn.classList.remove("loading"); playBlob(key, blob, btn, text); return; }
+    if (btn) btn.classList.add("loading");
+    // The selected model first; if it hits its limit (or does not exist), the next one before the device voice.
+    for (;;) {
+      const model = ttsModel();
+      if (!model) throw { code: "rate_limited" };
+      try { await speakLive(model, text, key, token, btn, v); return; }
+      catch (e) {
+        if (e && !e.started && token === speakToken && (e.code === "rate_limited" || e.code === "model_not_found")) {
+          if (e.code === "model_not_found") {
+            pauseTts(model, 10 * 60 * 1000);
+            if (!ttsNotice) { ttsNotice = true; toast(`El modelo de voz «${model}» no respondió; uso el otro. Revisa el «Modello vocale» en Impostazioni.`); }
+          } else pauseTts(model);
+          continue;
+        }
+        throw e;
+      }
+    }
+  } catch (e) {
+    if (token !== speakToken && !(e && e.code === "timeout")) return;
+    if (btn) btn.classList.remove("loading", "playing");
+    if (e && e.code === "cancelled" && token !== speakToken) return;
+    if (e && e.code === "rate_limited") {
+      toast("Los dos modelos de voz natural llegaron a su límite. Uso la voz del dispositivo durante un minuto.");
+    } else if (e && (e.code === "timeout" || (e.code === "cancelled"))) {
+      toast("La voz natural tarda demasiado. Uso la voz del dispositivo.");
+    } else if (!ttsNotice) {
+      ttsNotice = true;
+      toast("La voz natural no respondió. Uso la voz del dispositivo." + (e && e.code === "model_not_found" ? " Revisa el «Modello vocale» en Impostazioni." : ""));
+    }
+    stopAudio();
+    deviceSpeak(text, btn);
+  }
+}
+// One attempt with one TTS model: stream at normal speed, download fully at slow speed.
+// Errors say whether audio had already started (then switching models makes no sense).
+async function speakLive(model, text, key, token, btn, v) {
+  const ctl = new AbortController(); liveCtl = ctl;
+  const timer = setTimeout(() => { ctl.timedOut = true; ctl.abort(); }, 20000);
+  let started = false, blob = null;
+  const onStart = () => { started = true; clearTimeout(timer); if (btn) { btn.classList.remove("loading"); btn.classList.add("playing"); } };
+  try {
+    // Normal speed: stream and start playing as soon as the first audio arrives.
+    // Slow speed: download fully, then play at 0.8x with natural pitch.
+    if (!settings.slow && !streamUnsupported && audioCtx()) {
+      try { blob = await streamTTS(text, ctl.signal, token, onStart, btn, v, model); }
+      catch (e) {
+        if (e && e.code === "bad_request" && !started) { streamUnsupported = true; blob = null; }
+        else throw e;
+      }
+      if (!blob && streamUnsupported && token === speakToken) {
+        blob = await fetchTTS(text, ctl.signal, v, model);
+        if (token === speakToken) { onStart(); playBlob(key, blob, btn, text); }
+      }
+    } else {
+      blob = await fetchTTS(text, ctl.signal, v, model);
+      if (token === speakToken) { onStart(); playBlob(key, blob, btn, text); }
+    }
+  } catch (e) {
+    if (e && typeof e === "object") e.started = started;
+    throw e;
+  } finally { clearTimeout(timer); if (liveCtl === ctl) liveCtl = null; }
+  if (blob) idbPut(key, blob);
+  if (token === speakToken && !started) throw { code: ctl.timedOut ? "timeout" : "empty_completion", started: false };
+}
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej({ code: "timeout" }), ms))]);
+}
+// Generate the main sentence's audio in the background, so the first tap plays instantly.
+// Returns the pending job (a Promise of the audio Blob), or null when natural voices are off.
+// Background audio only uses the selected model, so the backup model's quota stays free for taps.
+function prefetchSpeech(text, v) {
+  text = speechText(text);
+  const model = cfg.gemini.tts;
+  if (!text || !naturalOn() || Date.now() <= (ttsPausedUntil[model] || 0)) return null;
+  const key = ttsKey(text, v);
+  if (pendingAudio.has(key)) return pendingAudio.get(key);
+  const job = (async () => {
+    const have = await cachedAudio(text, v);
+    if (have) return have;
+    const blob = await fetchTTS(text, undefined, v, model);
+    idbPut(key, blob);
+    return blob;
+  })();
+  pendingAudio.set(key, job);
+  job.catch(e => { if (e && e.code === "rate_limited") pauseTts(model); })
+     .finally(() => setTimeout(() => pendingAudio.delete(key), 1000));
+  return job;
+}
+function sayBtn(text, v) {
+  const b = h("button", { class: "say", type: "button", "aria-label": "Ascolta", title: "Ascolta" });
+  b.innerHTML = ICON.speak; b.addEventListener("click", () => speak(text, b, { voice: v }));
+  return b;
+}
+
+/* natural-voice audio: Gemini TTS, cached in IndexedDB so repeated sentences cost nothing */
+let ttsDbP = null;
+function ttsDb() {
+  if (!ttsDbP) ttsDbP = new Promise((res, rej) => {
+    const r = indexedDB.open("talia-tts", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("a");
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  return ttsDbP;
+}
+async function idbGet(k) {
+  try { const d = await ttsDb(); return await new Promise(res => { const q = d.transaction("a").objectStore("a").get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
+  catch { return null; }
+}
+async function idbPut(k, v) {
+  try {
+    const d = await ttsDb();
+    d.transaction("a", "readwrite").objectStore("a").put(v, k);
+    const order = store.get("tts.keys", []).filter(x => x !== k); order.push(k);
+    while (order.length > 150) { const old = order.shift(); d.transaction("a", "readwrite").objectStore("a").delete(old); }
+    store.set("tts.keys", order);
+  } catch {}
+}
+function pcmToWav(bytes, rate) {
+  const buf = new ArrayBuffer(44 + bytes.length), v = new DataView(buf);
+  const w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + bytes.length, true); w(8, "WAVE"); w(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, "data"); v.setUint32(40, bytes.length, true);
+  new Uint8Array(buf, 44).set(bytes);
+  return buf;
+}
+const b64bytes = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+function concatBytes(arrs) { let n = 0; for (const a of arrs) n += a.length; const o = new Uint8Array(n); let i = 0; for (const a of arrs) { o.set(a, i); i += a.length; } return o; }
+// Gemini 3.8 TTS can return WAV files (with header and extra chunks) instead of raw PCM.
+// Read the real sample data out of them, so header/metadata bytes are never played as noise.
+function unwrapWav(bytes) {
+  if (bytes.length < 12 || bytes[0] !== 0x52 || bytes[1] !== 0x49 || bytes[2] !== 0x46 || bytes[3] !== 0x46) return null; // "RIFF"
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+  const tag = o => String.fromCharCode(bytes[o], bytes[o + 1], bytes[o + 2], bytes[o + 3]);
+  let rate = 0, p = 12;
+  while (p + 8 <= bytes.length) {
+    const id = tag(p); let size = dv.getUint32(p + 4, true); const start = p + 8;
+    if (id === "fmt " && start + 8 <= bytes.length) rate = dv.getUint32(start + 4, true);
+    if (id === "data") {
+      if (!size || size === 0xFFFFFFFF || start + size > bytes.length) size = bytes.length - start;
+      return { pcm: bytes.slice(start, start + size), rate };
+    }
+    p = start + size + (size % 2);
+  }
+  return { pcm: new Uint8Array(0), rate };
+}
+function audioParts(obj) {
+  const parts = (obj && obj.candidates && obj.candidates[0] && obj.candidates[0].content && obj.candidates[0].content.parts) || [];
+  const chunks = []; let rate = 0;
+  for (const p of parts) {
+    const inl = p.inlineData || p.inline_data;
+    if (!inl || !inl.data) continue;
+    const m = String(inl.mimeType || inl.mime_type || "").match(/rate=(\d+)/);
+    if (m) rate = +m[1];
+    let bytes = b64bytes(inl.data);
+    const w = unwrapWav(bytes);
+    if (w) { bytes = w.pcm; if (w.rate) rate = w.rate; }
+    if (bytes.length) chunks.push(bytes);
+  }
+  return { chunks, rate };
+}
+// Clean the end of a clip: cut a short noise burst after the final pause (the "radio" sound)
+// and fade in/out a few milliseconds so the audio never starts or stops with a click.
+function cleanPcm(bytes, rate, opts = {}) {
+  const n = Math.floor(bytes.length / 2);
+  if (!n) return new Uint8Array(0);
+  const src = new DataView(bytes.buffer, bytes.byteOffset, n * 2);
+  const smp = new Float32Array(n);
+  let peak = 0;
+  for (let i = 0; i < n; i++) { const v = src.getInt16(i * 2, true); smp[i] = v; const a = Math.abs(v); if (a > peak) peak = a; }
+  let end = n;
+  if (opts.trim !== false && peak > 0) {
+    const f = Math.max(1, Math.round(rate * 0.01)), frames = Math.floor(n / f), thr = peak * 0.03;
+    const loud = new Array(frames);
+    for (let k = 0; k < frames; k++) { let sum = 0; for (let i = k * f; i < (k + 1) * f; i++) sum += smp[i] * smp[i]; loud[k] = Math.sqrt(sum / f) > thr; }
+    let k = frames - 1; while (k >= 0 && !loud[k]) k--;            // skip trailing silence
+    const burstEnd = k; while (k >= 0 && loud[k]) k--;              // last loud stretch
+    const burstStart = k + 1, burstLen = burstEnd - k;
+    let g = k; while (g >= 0 && !loud[g]) g--;                      // pause before it
+    const gapLen = k - g;
+    // a short burst (<= 250 ms) after a clear pause (>= 120 ms), right at the very end
+    if (burstEnd >= 0 && g >= 0 && burstLen > 0 && burstLen <= 25 && gapLen >= 12 && frames - burstEnd <= 60) {
+      end = Math.min((g + 1 + 8) * f, burstStart * f);
+    }
+  }
+  const fi = opts.fadeIn === false ? 0 : Math.min(end, Math.round(rate * 0.006));
+  const fo = opts.fadeOut === false ? 0 : Math.min(end, Math.round(rate * 0.03));
+  for (let i = 0; i < fi; i++) smp[i] *= i / fi;
+  for (let i = 0; i < fo; i++) smp[end - 1 - i] *= i / fo;
+  const out = new Uint8Array(end * 2), dv = new DataView(out.buffer);
+  for (let i = 0; i < end; i++) dv.setInt16(i * 2, Math.max(-32768, Math.min(32767, Math.round(smp[i]))), true);
+  return out;
+}
+// Only the Italian text is sent: no instructions, so the voice starts directly with the sentence.
+const ttsBody = (text, v) => ({ contents: [{ parts: [{ text }] }],
+  generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName(v) } } } } });
+async function fetchTTS(text, signal, v, model = cfg.gemini.tts) {
+  const g = cfg.gemini;
+  const data = await post(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { "x-goog-api-key": g.key }, ttsBody(text, v), signal);
+  const { chunks, rate } = audioParts(data);
+  if (!chunks.length) throw { code: "empty_completion" };
+  const r = rate || 24000;
+  return new Blob([pcmToWav(cleanPcm(concatBytes(chunks), r), r)], { type: "audio/wav" });
+}
+async function streamTTS(text, signal, token, onStart, btn, v, model = cfg.gemini.tts) {
+  const g = cfg.gemini, ctx = audioCtx();
+  let res;
+  try {
+    res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
+      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": g.key }, body: JSON.stringify(ttsBody(text, v)), signal });
+  } catch (e) { throw { code: signal && signal.aborted ? "cancelled" : "network" }; }
+  if (!res.ok || !res.body) {
+    let d = null; try { d = await res.json(); } catch {}
+    const er = (d && (d.error || (Array.isArray(d) && d[0] && d[0].error))) || {};
+    throw httpError(res.status, er.message, er.status);
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  const all = []; let rate = 24000, buf = "", t = 0, last = null, pend = new Uint8Array(0), firstOut = true;
+  const sources = liveSources;
+  const schedule = bytes => {
+    if (token !== speakToken) return;
+    const n = Math.floor(bytes.length / 2); if (!n) return;
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+    const ab = ctx.createBuffer(1, n, rate), ch = ab.getChannelData(0);
+    for (let i = 0; i < n; i++) ch[i] = dv.getInt16(i * 2, true) / 32768;
+    const src = ctx.createBufferSource(); src.buffer = ab; src.connect(ctx.destination);
+    const now = ctx.currentTime; if (t < now + 0.05) t = now + 0.1;
+    src.start(t); t += ab.duration; sources.push(src); last = src;
+    if (sources.length === 1) onStart();
+  };
+  const handleEvent = ev => {
+    const data = ev.split("\n").filter(l => l.startsWith("data:")).map(l => l.slice(5).trim()).join("");
+    if (!data || data === "[DONE]") return;
+    let obj; try { obj = JSON.parse(data); } catch { return; }
+    if (obj.error) throw httpError(obj.error.code || 0, obj.error.message, obj.error.status);
+    const p = audioParts(obj);
+    if (p.rate) rate = p.rate;
+    for (const c of p.chunks) { all.push(c); feed(c); }
+  };
+  const feed = c => {
+    pend = concatBytes([pend, c]);
+    const hold = Math.round(rate * 0.5) * 2;
+    if (pend.length > hold + rate * 0.2 * 2) {
+      let cut = pend.length - hold; cut -= cut % 2;
+      const head = pend.slice(0, cut); pend = pend.slice(cut);
+      schedule(cleanPcm(head, rate, { trim: false, fadeIn: firstOut, fadeOut: false })); firstOut = false;
+    }
+  };
+  for (;;) {
+    let r;
+    try { r = await reader.read(); } catch { throw { code: signal && signal.aborted ? "cancelled" : "network" }; }
+    if (r.done) break;
+    buf += dec.decode(r.value, { stream: true }).replace(/\r/g, "");
+    let i;
+    while ((i = buf.indexOf("\n\n")) >= 0) { handleEvent(buf.slice(0, i)); buf = buf.slice(i + 2); }
+  }
+  if (buf.trim()) handleEvent(buf);
+  if (!all.length) throw { code: "empty_completion" };
+  if (pend.length) schedule(cleanPcm(pend, rate, { fadeIn: firstOut }));
+  if (last) last.onended = () => { if (token === speakToken) { if (btn) btn.classList.remove("playing"); releaseAudio(); } };
+  return new Blob([pcmToWav(cleanPcm(concatBytes(all), rate), rate)], { type: "audio/wav" });
+}
+
+/* ---------- AI provider: Gemini ---------- */
+const PROVIDERS = {
+  gemini: { label: "Gemini", keyHint: "AIza…", keyUrl: "https://aistudio.google.com/apikey", keyUrlText: "aistudio.google.com/apikey",
+    note: "Gratis (con límites diarios).", defModel: "gemini-flash-latest", defFast: "gemini-3.5-flash-lite" }
+};
+const PFX = { gemini: "gm" };
+const cfg = { provider: "gemini" };
+for (const id of Object.keys(PROVIDERS)) {
+  cfg[id] = { key: store.get(PFX[id] + ".key", ""), model: store.get(PFX[id] + ".model", PROVIDERS[id].defModel), fast: store.get(PFX[id] + ".fast", PROVIDERS[id].defFast) };
+}
+cfg.gemini.tts = store.get("gm.tts", "gemini-3.8-flash-lite-tts");
+const cur = () => cfg[cfg.provider];
+const saveCfg = id => { store.set("prov", cfg.provider); for (const k of ["key", "model", "fast"]) store.set(PFX[id] + "." + k, cfg[id][k]); };
+
+function parseJSON(t) {
+  try { return JSON.parse(t); } catch {}
+  const f = t.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (f) { try { return JSON.parse(f[1]); } catch {} }
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch {} }
+  return undefined;
+}
+function httpError(status, msg, code) {
+  const m = msg || "", c = code || "";
+  if (/unsupported_country|location|region|country/i.test(c + " " + m)) return { code: "region", message: m };
+  if (status === 429) return { code: "rate_limited", message: m };
+  if (status === 404 || c === "model_not_found" || /model .*(does not exist|not found)|do not have access to the model/i.test(m)) return { code: "model_not_found", message: m };
+  if (status === 401 || status === 403 || /api[ _]?key/i.test(m)) return { code: "bad_key", message: m };
+  if (status >= 500) return { code: "upstream_error", message: m };
+  return { code: "bad_request", message: m };
+}
+async function post(url, headers, body, signal) {
+  let res;
+  try { res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body), signal }); }
+  catch (e) {
+    if ((signal && signal.aborted) || (e && e.name === "AbortError")) throw { code: "cancelled" };
+    throw { code: "network" };
+  }
+  let data = null;
+  try { data = await res.json(); } catch { if (signal && signal.aborted) throw { code: "cancelled" }; }
+  if (!res.ok) { const er = (data && data.error) || {}; throw httpError(res.status, er.message, er.code || er.status); }
+  return data;
+}
+async function callGemini(c, model, kind, prompt, opts) {
+  const parts = [{ text: prompt }];
+  const body = { contents: [{ role: "user", parts }], generationConfig: { temperature: opts.temperature ?? (kind === "json" ? 0.4 : 0.1) } };
+  if (kind === "json") body.generationConfig.responseMimeType = "application/json";
+  if (opts.safety) body.safetySettings = opts.safety;
+  const data = await post(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { "x-goog-api-key": c.key }, body, opts.signal);
+  const cand = data && data.candidates && data.candidates[0];
+  if (!cand) throw { code: data && data.promptFeedback && data.promptFeedback.blockReason ? "refused" : "empty_completion" };
+  const text = ((cand.content && cand.content.parts) || []).filter(p => typeof p.text === "string" && !p.thought).map(p => p.text).join("").trim();
+  if (!text) throw { code: /SAFETY|BLOCK|PROHIBITED/.test(cand.finishReason || "") ? "refused" : "empty_completion" };
+  return { text, truncated: cand.finishReason === "MAX_TOKENS" };
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function ask(kind, prompt, opts = {}) {
+  const c = cur();
+  if (!c.key) throw { code: "no_key" };
+  const call = callGemini;
+  const first = opts.modelTier === "quick" ? c.fast : c.model;
+  let out;
+  try { out = await call(c, first, kind, prompt, opts); }
+  catch (e) {
+    // Overloaded or transient: wait a moment, then retry once with the other model.
+    if (!e || e.code !== "upstream_error") throw e;
+    await sleep(2500);
+    if (opts.signal && opts.signal.aborted) throw { code: "cancelled" };
+    out = await call(c, first === c.model ? c.fast : c.model, kind, prompt, opts);
+  }
+  if (kind !== "json") return out;
+  const parsed = parseJSON(out.text);
+  if (parsed === undefined) throw { code: "invalid_json" };
+  return parsed;
+}
+async function getJSON(url, headers) {
+  let res;
+  try { res = await fetch(url, { headers }); } catch { throw { code: "network" }; }
+  let data = null; try { data = await res.json(); } catch {}
+  if (!res.ok) { const er = (data && data.error) || {}; throw httpError(res.status, er.message, er.code || er.status); }
+  return data || {};
+}
+async function listModels(provider, key) {
+  const data = await getJSON("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", { "x-goog-api-key": key });
+  return (data.models || [])
+    .filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+    .map(m => String(m.name || "").replace(/^models\//, ""))
+    .filter(n => /^gemini/.test(n) && !/tts|image|live|embedding|transcribe|robotics|audio/.test(n));
+}
+const ERR_COPY = {
+  no_key: "Falta tu clave de API. Pégala en Impostazioni (pantalla de inicio).",
+  bad_key: "La clave fue rechazada. Revisa que esté bien copiada y que corresponda al proveedor elegido.",
+  model_not_found: "Ese modelo no existe o tu clave no tiene acceso. Elige otro en Impostazioni.",
+  region: "El servicio no está disponible desde tu ubicación con esta clave.",
+  rate_limited: "Límite de uso alcanzado. Espera un minuto y vuelve a intentarlo.",
+  network: "Sin conexión. Revisa tu internet.",
+  upstream_error: "El servicio está saturado ahora mismo. Pulsa «Riprova» en un momento.",
+  bad_request: "No se pudo procesar esta consulta.",
+  refused: "No hubo respuesta para esta consulta. Prueba con otra frase.",
+  refused_adult: "El filtro de Gemini bloqueó esta respuesta. Pulsa «Riprova» o cambia de rumbo: el modo 18+ no admite contenido sexual explícito.",
+  invalid_json: "La respuesta llegó con formato incorrecto. Pulsa «Riprova».",
+  empty_completion: "Llegó una respuesta vacía. Pulsa «Riprova»."
+};
+const FATAL = new Set(["no_key", "bad_key", "model_not_found", "region"]);
+const errText = e => ERR_COPY[e && e.code] || "No se pudo conectar. Pulsa «Riprova».";
+const openSettings = () => { location.hash = "home"; setTimeout(() => { const k = $("#gk"); if (k) { k.scrollIntoView({ block: "center" }); k.focus(); } }, 80); };
+function errBox(e, retry) {
+  if (e && e.code === "cancelled") return h("div", { class: "muted small", text: "Interrotto." });
+  const box = h("div", { class: "err" }, h("div", { text: errText(e) }));
+  if (e && e.message && !["rate_limited", "network"].includes(e.code)) box.append(h("div", { class: "detail", text: e.message }));
+  if (FATAL.has(e && e.code)) box.append(h("button", { class: "ghost", type: "button", style: "margin-top:8px", onclick: openSettings }, "Apri Impostazioni"));
+  if (retry && !FATAL.has(e && e.code)) {
+    box.append(h("button", { class: "ghost", type: "button", style: "margin-top:8px", onclick: () => { box.remove(); retry(); } }, "Riprova"));
+  }
+  return box;
+}
+
+/* ---------- prompts ---------- */
+const TRAD_PROMPT = (t, dir) => `Eres un profesor de italiano muy preciso. Tu alumno (hispanohablante, nivel ${lvl()}) quiere traducir y entender esto:
+
+«${t}»
+
+${dir === "it" ? "El texto está en italiano: tradúcelo al español."
+  : dir === "es" ? "El texto está en español: tradúcelo al italiano como lo diría un nativo (tu o Lei según el contexto; si no está claro, tu)."
+  : "Detecta el idioma. Si está en italiano, tradúcelo al español. Si está en español (u otro idioma), tradúcelo al italiano como lo diría un nativo (tu o Lei según el contexto; si no está claro, tu)."}
+
+El objetivo es que el alumno reconozca las estructuras clave del italiano de esta frase y aprenda a reutilizarlas.
+
+Responde SOLO con JSON:
+{"source": "it" | "es",
+ "italian": "la frase en italiano: el original si el texto estaba en italiano (corrigiendo solo erratas evidentes); si no, tu traducción",
+ "spanish": "traducción al español natural y en contexto (o el original si estaba en español)",
+ "literal": "traducción palabra por palabra al español respetando el orden italiano, para ver cómo está construida la frase",
+ "structures": [{"name": "nombre corto de la estructura", "pattern": "fórmula breve, p. ej. «essere + participio (concordado)»", "parts": ["fragmentos exactos de italian que forman la estructura, en orden"], "explain": "qué es y cuándo se usa, máx. 25 palabras", "examples": [{"it": "frase de ejemplo", "es": "su traducción"}]}],
+ "vocab": [{"it": "palabra clave (sustantivos con artículo, verbos en infinitivo)", "info": "plural irregular, participio con su auxiliar o régimen (p. ej. «pl. le uova», «è rimasto», «+ di + inf.»), o vacío", "es": "significado aquí"}],
+ "note": "un matiz importante de uso, registro o región, o un falso amigo con el español, en 1 frase, o vacío"}
+
+Reglas:
+- structures: de 2 a 4, las más útiles para nivel ${lvl()}, ordenadas por importancia. Piensa en: pronombres átonos y combinados (lo, gli, glielo, me ne), ci y ne, passato prossimo con avere o essere (y la concordancia del participio), imperfetto frente a passato prossimo, futuro y condizionale, congiuntivo (penso che, spero che, benché…), periodo ipotetico, si impersonal y si pasivante, stare + gerundio, stare per + infinitivo, verbos pronominales (andarsene, farcela, cavarsela), preposiciones articuladas, verbos con preposición fija (pensare a, smettere di), imperativo con pronombres (dimmi, fallo), fare + infinitivo, pasiva con venire o andare, comparativos, oraciones de relativo (che, cui), expresiones fijas o idiomáticas.
+- parts: copia los fragmentos tal cual aparecen en "italian". Una estructura discontinua tiene varios fragmentos, p. ej. ["non", "mai"] o ["ho", "visto"].
+- examples: exactamente 2 por estructura: frases nuevas (no la del alumno), cortas, naturales y del día a día, de nivel ${lvl()}, con la misma estructura.
+- vocab: máximo 5 palabras realmente útiles; no incluyas palabras muy básicas para nivel ${lvl()}.
+- Explicaciones en español y muy breves. Precisión ante todo. Si la frase italiana original tiene un error o suena poco natural, dilo en "note"; si no, avisa en "note" de un falso amigo con el español si lo hay.`;
+
+const DOTT_PROMPT = t => `Eres un profesor de italiano muy preciso. Tu alumno (hispanohablante, nivel ${lvl()}) escribió esta frase en italiano:
+
+«${t}»
+
+Evalúala. Responde SOLO con JSON:
+{"verdict": "correct" | "almost" | "wrong",
+ "corrected": "…",
+ "translation": "…",
+ "errors": [{"wrong": "fragmento original", "right": "corrección", "why": "explicación brevísima en español"}],
+ "tip": "…"}
+
+Criterios:
+- "correct": gramaticalmente correcta y natural. Las variantes de estilo no son errores; ignora si falta el punto final. corrected = la frase original tal cual; errors = [].
+- "almost": se entiende, pero tiene errores o suena poco natural. corrected = una versión natural de nivel aproximado ${lvlUp()} que mantiene lo que quería decir.
+- "wrong": muy incorrecta o difícil de entender. corrected = lo que seguramente quiso decir, en italiano simple y natural.
+- Los acentos que faltan o sobran (è/e, perché/perche, però/pero) y lo que es un calco del español (falsos amigos, preposiciones o construcciones españolas, el «itañol») cuentan como errores.
+- translation = traducción al español natural y en contexto de "corrected".
+- errors: como máximo 4, los más importantes.
+- tip: un consejo breve en español solo si de verdad ayuda; si no, "".`;
+
+const DILLO_PROMPT = (t, reg) => `Eres un profesor de italiano muy preciso. Tu alumno (hispanohablante, nivel ${lvl()}) quiere decir esto en italiano:
+
+«${t}»
+
+${reg === "tu" ? "Usa el tuteo (tu / voi)." : reg === "Lei" ? "Usa el trato formal (Lei)." : "Elige tu o Lei según el contexto; si no está claro, usa tu."}
+
+Responde SOLO con JSON:
+{"italian": "cómo lo diría un nativo, natural y en contexto",
+ "alt": "una alternativa habitual (otra formulación u otro registro), o vacío",
+ "breakdown": [{"it": "palabra o grupo de palabras de la frase italiana", "es": "significado aquí", "func": "función gramatical breve"}],
+ "note": "la clave gramatical o de uso más importante (o un falso amigo con el español), en 1 frase, o vacío"}
+
+Reglas: breakdown recorre "italian" en orden y agrupa como un buen profesor (máximo 10 elementos). "es" y "func" muy breves (máx. 15 palabras). Si el texto tiene varias frases, tradúcelas todas en "italian".`;
+
+/* ---------- modules ---------- */
+// Colours of the Milan Metro lines: M1 red, M2 green, M3 yellow, M4 blue (the 18+ chats use the lilac of M5).
+const MODS = [
+  { id: "trad", name: "Traduttore", c: "var(--red)", on: "var(--on-dark)", it: "Traduci e scopri le strutture.", es: "Traduce frases y descubre sus estructuras clave." },
+  { id: "dottore", name: "Dottor Frase", c: "var(--green)", on: "var(--on-dark)", it: "Scrivi una frase. Te la correggo io.", es: "Escribe en italiano y te digo si está bien." },
+  { id: "dillo", name: "Dillo in italiano!", c: "var(--yellow)", on: "var(--on-yellow)", it: "Pensa in spagnolo, parla in italiano.", es: "Escribe en español y aprende cómo se dice." },
+  { id: "chiacchiere", name: "Quattro chiacchiere", c: "var(--blue)", on: "var(--on-dark)", it: "Si chiacchiera come al bar.", es: "Conversa en italiano con correcciones breves." }
+];
+const SCREENS = ["home", ...MODS.map(m => m.id)];
+const route = () => { const r = location.hash.slice(1); return SCREENS.includes(r) ? r : "home"; };
+function show(id) {
+  for (const s of SCREENS) $("#" + s).hidden = s !== id;
+  stopAudio();
+}
+window.addEventListener("hashchange", () => show(route()));
+const goHome = () => { location.hash = "home"; };
+
+function buildScreen(mod, sub) {
+  const sec = $("#" + mod.id);
+  sec.style.setProperty("--c", mod.c); sec.style.setProperty("--on", mod.on);
+  const back = h("button", { class: "back", type: "button", onclick: goHome }); back.innerHTML = ICON.back; back.append("Talia");
+  const tools = h("div", { class: "tools" });
+  const subP = h("p", { text: sub });
+  const feed = h("main", { class: "feed", "aria-live": "polite" });
+  sec.append(h("header", { class: "bar" }, h("div", { class: "row" }, back, tools), h("h1", { text: mod.name }), subP), feed);
+  return { sec, feed, tools, subP };
+}
+
+function makeComposer(sec, { placeholder, onSend, before, autocorrect = true }) {
+  const ta = h("textarea", { rows: "1", placeholder, "aria-label": placeholder, enterkeyhint: "send", autocapitalize: "sentences",
+    autocorrect: autocorrect ? "on" : "off", spellcheck: autocorrect ? "true" : "false" });
+  const send = h("button", { class: "send", type: "button", "aria-label": "Invia" });
+  send.innerHTML = `<span class="i-send">${ICON.send}</span><span class="i-stop">${ICON.stop}</span>`;
+  const wrap = h("footer", { class: "composer" }, before || null, ta, send);
+  sec.append(wrap);
+  let ctl = null, disabled = false;
+  const sync = () => { ta.disabled = disabled; send.disabled = disabled && !ctl; };
+  const grow = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 140) + "px"; };
+  ta.addEventListener("input", grow);
+  const submit = () => { const v = ta.value.trim(); if (!v || ctl || disabled) return; ta.value = ""; grow(); onSend(v); };
+  ta.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); } });
+  send.addEventListener("click", () => { if (ctl) ctl.abort(); else submit(); });
+  return {
+    ta, wrap,
+    get busy() { return !!ctl; },
+    start() { ctl = new AbortController(); send.classList.add("stop"); send.setAttribute("aria-label", "Ferma"); sync(); return ctl.signal; },
+    end() { ctl = null; send.classList.remove("stop"); send.setAttribute("aria-label", "Invia"); sync(); },
+    setDisabled(v) { disabled = v; sync(); },
+    abort() { if (ctl) ctl.abort(); }
+  };
+}
+
+function lineEl(label, value, cls) {
+  return h("p", { class: "line" }, h("span", { class: "lbl" }, label + " "), cls ? h("span", { class: cls }, value) : value);
+}
+function breakdownEl(items) {
+  const ul = h("ul", { class: "bd" });
+  for (const x of arr(items)) {
+    const it = str(x && x.it); if (!it) continue;
+    const f = h("button", { class: "frag", type: "button", title: "Ascolta" }, it);
+    f.addEventListener("click", () => speak(it, f));
+    const es = noDot(str(x.es)), fn = noDot(str(x.func));
+    ul.append(h("li", null, f, " → ", es, fn ? h("span", { class: "func" }, (es ? ". " : "") + fn + ".") : (es ? "." : "")));
+  }
+  return ul;
+}
+function emptyEl(big, small) { return h("div", { class: "empty" }, h("span", { class: "big", text: big }), small); }
+
+/* ---------- Home ---------- */
+function initHome() {
+  const home = $("#home");
+  const hello = h("p", { class: "hello" });
+  const renderHello = () => hello.replaceChildren("Ciao, ", h("b", { text: userName() }), ". Cosa pratichiamo oggi?");
+  renderHello();
+  const banner = h("p", { class: "banner", hidden: !!cur().key },
+    "Primer paso: crea tu clave gratis de Gemini y pégala abajo en Impostazioni. ",
+    h("button", { class: "mini", type: "button", style: "color:inherit", onclick: openSettings }, "Ir a Impostazioni"));
+  const books = MODS.map(m => {
+    const b = h("button", { class: "book", type: "button", onclick: () => { location.hash = m.id; } },
+      h("span", { class: "frame" }, h("span", { class: "t", text: m.name }), h("span", { class: "it", text: m.it }), h("span", { class: "es", text: m.es })));
+    b.style.setProperty("--c", m.c); b.style.setProperty("--on", m.on);
+    return b;
+  });
+  const nameIn = h("input", { id: "nm", type: "text", value: settings.name, autocomplete: "given-name" });
+  nameIn.addEventListener("change", () => { settings.name = nameIn.value.trim() || "Axel"; nameIn.value = settings.name; store.set("name", settings.name); renderHello(); });
+  const aboutIn = h("textarea", { id: "ab", rows: "3", maxlength: "400", placeholder: "es. Vengo dal Perù, studio … e mi piace …" });
+  aboutIn.value = settings.about;
+  aboutIn.addEventListener("change", () => { settings.about = aboutIn.value.trim(); aboutIn.value = settings.about; store.set("about", settings.about); });
+  const segBtns = [["Normale", false], ["Lenta", true]].map(([t, v]) => {
+    const b = h("button", { type: "button", "aria-pressed": String(settings.slow === v) }, t);
+    b.addEventListener("click", () => { settings.slow = v; store.set("slow", v); segBtns.forEach(x => x.setAttribute("aria-pressed", String(x === b))); speak("Ciao! Ecco la velocità della voce.", b); });
+    return b;
+  });
+  const provBox = h("div", { class: "settings", style: "margin:0;padding:0;border:0" });
+  const dl = h("datalist", { id: "ai-models" });
+  function renderProv() {
+    const id = cfg.provider, P = PROVIDERS[id], c = cfg[id];
+    const keyIn = h("input", { id: "gk", type: "password", value: c.key, placeholder: P.keyHint, autocomplete: "off", spellcheck: "false" });
+    const eye = h("button", { class: "ghost", type: "button" }, "Ver");
+    eye.addEventListener("click", () => { const vis = keyIn.type === "password"; keyIn.type = vis ? "text" : "password"; eye.textContent = vis ? "Ocultar" : "Ver"; });
+    const saveKey = () => { c.key = keyIn.value.trim(); keyIn.value = c.key; saveCfg(id); banner.hidden = !!c.key; };
+    keyIn.addEventListener("change", saveKey);
+    const modelIn = h("input", { id: "gm", type: "text", value: c.model, list: "ai-models", autocomplete: "off", spellcheck: "false" });
+    modelIn.addEventListener("change", () => { c.model = modelIn.value.trim() || P.defModel; modelIn.value = c.model; saveCfg(id); });
+    const fastIn = h("input", { id: "gf", type: "text", value: c.fast, list: "ai-models", autocomplete: "off", spellcheck: "false" });
+    fastIn.addEventListener("change", () => { c.fast = fastIn.value.trim() || P.defFast; fastIn.value = c.fast; saveCfg(id); });
+    const status = h("p", { class: "status", role: "status" });
+    const test = h("button", { class: "ghost", type: "button" }, "Verifica connessione");
+    test.addEventListener("click", async () => {
+      saveKey();
+      if (!c.key) { status.className = "status bad"; status.textContent = ERR_COPY.no_key; return; }
+      test.disabled = true; status.className = "status"; status.textContent = "Verifico…";
+      try {
+        const names = await listModels(id, c.key);
+        dl.replaceChildren(...names.map(n => h("option", { value: n })));
+        const missing = [c.model, c.fast].filter(m => !names.includes(m) && !/latest$/.test(m));
+        status.className = missing.length ? "status bad" : "status ok";
+        status.textContent = missing.length
+          ? `Clave OK, pero no encuentro: ${missing.join(", ")}. Toca el campo de modelo para ver la lista.`
+          : `Connessione OK. ${names.length} modelos disponibles.`;
+      } catch (e) { status.className = "status bad"; status.textContent = errText(e); }
+      finally { test.disabled = false; }
+    });
+    provBox.replaceChildren(
+      h("div", { class: "field stack" }, h("label", { for: "gk" }, `Chiave API ${P.label}`), h("div", { class: "keyrow" }, keyIn, eye),
+        h("p", { class: "note" }, P.note + " Clave en ", h("a", { href: P.keyUrl, target: "_blank", rel: "noopener" }, P.keyUrlText), ". Se guarda solo en este dispositivo.")),
+      h("div", { class: "field stack" }, h("label", { for: "gm" }, "Modello (Traduttore, Dottor Frase, Dillo)"), modelIn),
+      h("div", { class: "field stack" }, h("label", { for: "gf" }, "Modello veloce (Quattro chiacchiere)"), fastIn, dl),
+      h("div", { class: "field" }, test), status);
+  }
+  renderProv();
+  const voiceSel = h("select", { id: "vs", class: "vsel" });
+  const fillVoices = () => {
+    const g = h("optgroup", { label: "Naturale (Gemini)" }, GEMINI_VOICES.map(([id, label]) => h("option", { value: "g:" + id }, label)));
+    const d = h("optgroup", { label: "Voce del dispositivo (offline)" },
+      itVoices.length ? itVoices.map(v => h("option", { value: "d:" + v.voiceURI }, `${v.name} (${v.lang})`)) : h("option", { value: "d:auto" }, "Automatica"));
+    voiceSel.replaceChildren(g, d);
+    voiceSel.value = settings.voice;
+    if (voiceSel.value !== settings.voice) voiceSel.value = settings.voice.startsWith("g:") ? "g:Kore" : voiceSel.options[GEMINI_VOICES.length].value;
+  };
+  fillVoices();
+  document.addEventListener("talia-voices", fillVoices);
+  const ttsIn = h("input", { id: "tm", type: "text", value: cfg.gemini.tts, autocomplete: "off", spellcheck: "false" });
+  ttsIn.addEventListener("change", () => { cfg.gemini.tts = ttsIn.value.trim() || "gemini-3.8-flash-lite-tts"; ttsIn.value = cfg.gemini.tts; store.set("gm.tts", cfg.gemini.tts); resetTts(); });
+  const ttsRow = h("div", { class: "field stack" }, h("label", { for: "tm" }, "Modello vocale (voce naturale)"), ttsIn,
+    h("p", { class: "note", text: "Las voces naturales usan tu cuota gratis de Gemini. Cada frase se descarga una sola vez y queda guardada. Si este modelo llega a su límite, Talia prueba el otro (gemini-3.8-flash-tts o gemini-3.8-flash-lite-tts, con cuota propia) y, si los dos están al límite, usa la voz del dispositivo durante un minuto." }));
+  const syncTts = () => { ttsRow.hidden = !settings.voice.startsWith("g:"); };
+  voiceSel.addEventListener("change", () => { settings.voice = voiceSel.value; store.set("voice", settings.voice); resetTts(); pickVoice(); syncTts(); });
+  const probe = h("button", { class: "ghost", type: "button" }, "Prova");
+  probe.addEventListener("click", () => speak("Ciao! Sono la tua voce in Talia. Buono studio e buon divertimento!", probe));
+  syncTts();
+  const voiceBox = h("div", { class: "settings", style: "margin:0;padding:0;border:0" },
+    h("div", { class: "field stack" }, h("label", { for: "vs" }, "Voce"), h("div", { class: "keyrow" }, voiceSel, probe)),
+    ttsRow);
+  const lvlBtns = LEVELS.map(v => {
+    const b = h("button", { type: "button", "aria-pressed": String(lvl() === v) }, v);
+    b.addEventListener("click", () => { settings.level = v; store.set("level", v); lvlBtns.forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+    return b;
+  });
+  home.append(
+    h("h1", { class: "brand", text: "Talia" }), hello, banner, ...books,
+    h("div", { class: "settings" },
+      h("h2", { text: "Impostazioni" }),
+      provBox,
+      h("div", { class: "field" }, h("label", { for: "nm" }, "Il tuo nome"), nameIn),
+      h("div", { class: "field stack" }, h("label", { for: "ab" }, "Su di me (per Quattro chiacchiere)"), aboutIn,
+        h("p", { class: "note", text: "Escribe en español o en italiano algo sobre ti: de dónde eres, qué haces, qué te gusta. Las chicas de Quattro chiacchiere lo leen como si fuera tu perfil y te preguntan por ello." })),
+      h("div", { class: "field" }, h("span", null, "Il tuo livello"), h("div", { class: "seg", role: "group", "aria-label": "Livello" }, lvlBtns)),
+      h("div", { class: "field" }, h("span", null, "Velocità della voce"), h("div", { class: "seg", role: "group", "aria-label": "Velocità della voce" }, segBtns)),
+      voiceBox,
+      h("p", { class: "note", text: "Todo se guarda solo en este dispositivo. Con Gemini gratis, Google puede usar tus consultas para mejorar sus productos: no escribas datos privados." }))
+  );
+}
+
+/* ---------- A: Traduttore ---------- */
+function fragBtn(text) {
+  const f = h("button", { class: "frag", type: "button", title: "Ascolta" }, text);
+  f.addEventListener("click", () => speak(text, f));
+  return f;
+}
+// Marks the words of each structure inside the Italian sentence (colour + number per structure).
+function markStructures(it, sts) {
+  const toks = it.split(/\s+/).filter(Boolean);
+  const key = t => normTok(t).toLowerCase();
+  const owner = new Array(toks.length).fill(-1), ends = {};
+  sts.forEach((s, i) => {
+    let from = 0, last = -1;
+    const parts = arr(s.parts).map(str).flatMap(p => p.split(/\s*(?:…|\.\.\.)\s*/)).filter(Boolean);
+    for (const p of parts) {
+      const pt = p.split(/\s+/).map(key).filter(Boolean);
+      if (!pt.length) continue;
+      const fits = k => pt.every((w, j) => k + j < toks.length && owner[k + j] === -1 && key(toks[k + j]) === w);
+      let k = -1;
+      for (let x = from; x <= toks.length - pt.length && k < 0; x++) if (fits(x)) k = x;
+      for (let x = 0; x < from && k < 0; x++) if (fits(x)) k = x;
+      if (k < 0) continue;
+      for (let j = 0; j < pt.length; j++) owner[k + j] = i;
+      from = k + pt.length; last = Math.max(last, k + pt.length - 1);
+    }
+    if (last >= 0) (ends[last] = ends[last] || []).push(i);
+  });
+  const out = h("span");
+  let k = 0;
+  while (k < toks.length) {
+    if (k) out.append(" ");
+    const o = owner[k];
+    let e = k;
+    while (o >= 0 && e + 1 < toks.length && owner[e + 1] === o && !ends[e]) e++;
+    const txt = toks.slice(k, e + 1).join(" ");
+    // A final apostrophe belongs to the word in Italian (un po', be'), so it stays inside the highlight.
+    const tail = o >= 0 ? (txt.match(/[.,!?;:»«„“”")]+$/) || [""])[0] : "";
+    out.append(o >= 0 ? h("mark", { class: "sm st-" + o }, txt.slice(0, txt.length - tail.length)) : txt);
+    for (const i of ends[e] || []) out.append(h("sup", { class: "sn st-" + i, text: String(i + 1) }));
+    if (tail) out.append(tail);
+    k = e + 1;
+  }
+  return out;
+}
+function initTrad() {
+  const mod = MODS[0];
+  const { sec, feed } = buildScreen(mod, "Traduce frases y aprende sus estructuras clave con ejemplos.");
+  let dir = store.get("trad.dir", "auto");
+  if (!["auto", "it", "es"].includes(dir)) dir = "auto";
+  const dirBtns = [["auto", "Auto"], ["it", "IT → ES"], ["es", "ES → IT"]].map(([v, t]) => {
+    const b = h("button", { type: "button", "aria-pressed": String(dir === v) }, t);
+    b.addEventListener("click", () => { dir = v; store.set("trad.dir", v); dirBtns.forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+    return b;
+  });
+  sec.append(h("div", { class: "strip" }, "Direzione", h("div", { class: "seg", role: "group", "aria-label": "Direzione" }, dirBtns)));
+  const comp = makeComposer(sec, { placeholder: "Scrivi una frase o un'espressione…", onSend: t => translate(t), autocorrect: false });
+  let count = 0;
+  feed.append(emptyEl("Cosa vuoi tradurre?", "Escribe una frase en italiano o en español. Te doy la traducción, el audio y las estructuras clave con ejemplos."));
+  function translate(t) {
+    if (!count) feed.replaceChildren();
+    count++;
+    const body = h("div");
+    const qb = h("div", { class: "qbubble" + (dir === "it" ? " it" : ""), text: t });
+    const turn = h("div", { class: "turn" }, h("div", { class: "qrow" }, qb), body);
+    feed.append(turn);
+    const d0 = dir;
+    const run = async () => {
+      body.replaceChildren(thinking()); toEnd(feed);
+      const signal = comp.start();
+      try { const d = await ask("json", TRAD_PROMPT(t, d0), { signal }); body.replaceChildren(render(d, qb)); toTop(feed, turn); }
+      catch (e) { body.replaceChildren(errBox(e, run)); toEnd(feed); }
+      finally { comp.end(); }
+    };
+    run();
+  }
+  function render(d, qb) {
+    const w = h("div");
+    const it = str(d && d.italian);
+    if (!it) { w.append(errBox({ code: "invalid_json" })); return w; }
+    const fromIt = d.source === "it";
+    qb.classList.toggle("it", fromIt);
+    prefetchSpeech(it);
+    const sts = arr(d.structures).filter(s => s && str(s.name)).slice(0, 4);
+    w.append(h("p", { class: "line" }, h("span", { class: "it-big" }, markStructures(it, sts)), " ", sayBtn(it)));
+    const es = str(d.spanish);
+    if (fromIt && es) w.append(lineEl("Traducción:", es));
+    const lit = str(d.literal);
+    if (lit && lit.toLowerCase() !== "vacío") w.append(lineEl("Palabra por palabra:", lit, "lit"));
+    if (sts.length) {
+      w.append(h("p", { class: "sect", text: "Estructuras clave" }));
+      sts.forEach((s, i) => {
+        const card = h("div", { class: "st st-" + i },
+          h("div", { class: "st-h" }, h("span", { class: "sn st-" + i, text: String(i + 1) }), str(s.name)));
+        if (str(s.pattern)) card.append(h("div", { class: "pat", text: str(s.pattern) }));
+        if (str(s.explain)) card.append(h("p", { class: "st-x", text: str(s.explain) }));
+        const ex = arr(s.examples).filter(e => e && str(e.it)).slice(0, 3);
+        if (ex.length) card.append(h("ul", { class: "ex" }, ex.map(e => h("li", null, fragBtn(str(e.it)), str(e.es) ? h("span", { class: "func" }, " — " + str(e.es)) : null))));
+        w.append(card);
+      });
+    }
+    const voc = arr(d.vocab).filter(v => v && str(v.it)).slice(0, 5);
+    if (voc.length) {
+      w.append(h("p", { class: "sect", text: "Vocabulario" }));
+      w.append(h("ul", { class: "bd" }, voc.map(v => {
+        const info = str(v.info), es2 = noDot(str(v.es));
+        return h("li", null, fragBtn(str(v.it)), info && info.toLowerCase() !== "vacío" ? h("span", { class: "func" }, " (" + info + ")") : null, es2 ? " → " + es2 + "." : null);
+      })));
+    }
+    const note = str(d.note);
+    if (note && note.toLowerCase() !== "vacío") w.append(h("p", { class: "tip" }, h("span", { class: "lbl" }, "Nota: "), note));
+    return w;
+  }
+}
+
+/* ---------- B: Dottor Frase ---------- */
+// Only quotes and punctuation are stripped; a final apostrophe is part of an Italian word (po', be', di').
+const normTok = t => t.replace(/^[»«„“”"'(]+/, "").replace(/[.,!?;:»«„“”")]+$/, "");
+function diffWords(a, b) {
+  const A = a.split(/\s+/).filter(Boolean), B = b.split(/\s+/).filter(Boolean);
+  const n = A.length, m = B.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
+    dp[i][j] = normTok(A[i]) === normTok(B[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const sa = new Array(n).fill(false), sb = new Array(m).fill(false);
+  let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (normTok(A[i]) === normTok(B[j])) { sa[i] = sb[j] = true; i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++;
+  }
+  return { a: A.map((t, k) => ({ t, same: sa[k] })), b: B.map((t, k) => ({ t, same: sb[k] })) };
+}
+function diffEl(tokens, tag) {
+  const s = h("span");
+  tokens.forEach((tk, k) => { if (k) s.append(" "); s.append(tk.same ? tk.t : h(tag, { class: "x" }, tk.t)); });
+  return s;
+}
+function initDottore() {
+  const mod = MODS[1];
+  const { sec, feed } = buildScreen(mod, "Escribe una frase en italiano y te la corrijo.");
+  const comp = makeComposer(sec, { placeholder: "Scrivi una frase in italiano…", onSend: t => check(t), autocorrect: false });
+  let count = 0;
+  feed.append(emptyEl("Scrivi una frase.", "Si está bien, te lo confirmo. Si no, te doy una versión natural."));
+  function check(t) {
+    if (!count) feed.replaceChildren();
+    count++;
+    const body = h("div");
+    const turn = h("div", { class: "turn" }, h("div", { class: "qrow" }, h("div", { class: "qbubble it", text: t })), body);
+    feed.append(turn);
+    const run = async () => {
+      body.replaceChildren(thinking()); toEnd(feed);
+      const signal = comp.start();
+      try { const d = await ask("json", DOTT_PROMPT(t), { signal }); body.replaceChildren(render(d, t)); toTop(feed, turn); }
+      catch (e) { body.replaceChildren(errBox(e, run)); toEnd(feed); }
+      finally { comp.end(); }
+    };
+    run();
+  }
+  function render(d, orig) {
+    const v = ["correct", "almost", "wrong"].includes(d && d.verdict) ? d.verdict : "almost";
+    const corr = str(d && d.corrected) || orig;
+    prefetchSpeech(corr);
+    const w = h("div");
+    const labels = { correct: "Perfetto!", almost: "Quasi giusto", wrong: "Non proprio" };
+    w.append(h("div", { class: "verdict v-" + v }, h("span", { class: "dot" }), labels[v]));
+    let itNode = document.createTextNode(corr);
+    if (v === "almost") {
+      const df = diffWords(orig, corr);
+      w.append(h("p", { class: "line" }, h("span", { class: "lbl" }, "Tu frase: "), h("span", { class: "it-text" }, diffEl(df.a, "del"))));
+      itNode = diffEl(df.b, "ins");
+    }
+    if (v === "wrong") w.append(h("p", { class: "line lbl", text: "Seguro quisiste decir:" }));
+    w.append(h("div", { class: "pair" },
+      h("p", { class: "line" }, h("span", { class: "lbl" }, "Italiano: "), h("span", { class: "it-text" }, itNode), " ", sayBtn(corr)),
+      h("p", { class: "line" }, h("span", { class: "lbl" }, "Español: "), str(d && d.translation))));
+    const errs = v === "correct" ? [] : arr(d && d.errors).filter(e => e && (str(e.wrong) || str(e.right)));
+    if (errs.length) w.append(h("ul", { class: "errs" }, errs.map(e => h("li", null,
+      str(e.wrong) ? h("del", { class: "x" }, str(e.wrong)) : null, str(e.wrong) ? " → " : null,
+      h("ins", { class: "x" }, str(e.right)), str(e.why) ? h("span", { class: "func" }, ". " + noDot(str(e.why)) + ".") : null))));
+    if (str(d && d.tip)) w.append(h("p", { class: "tip" }, h("span", { class: "lbl" }, "Consiglio: "), str(d.tip)));
+    return w;
+  }
+}
+
+/* ---------- C: Dillo in italiano! ---------- */
+function initDillo() {
+  const mod = MODS[2];
+  const { sec, feed } = buildScreen(mod, "Escribe en español y te digo cómo se dice en italiano.");
+  let reg = store.get("dillo.reg", "auto");
+  if (!["auto", "tu", "Lei"].includes(reg)) reg = "auto";
+  const regBtns = [["auto", "Auto"], ["tu", "tu"], ["Lei", "Lei"]].map(([v, t]) => {
+    const b = h("button", { type: "button", "aria-pressed": String(reg === v) }, t);
+    b.addEventListener("click", () => { reg = v; store.set("dillo.reg", v); regBtns.forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+    return b;
+  });
+  sec.append(h("div", { class: "strip" }, "Trato", h("div", { class: "seg", role: "group", "aria-label": "Trato" }, regBtns)));
+  const comp = makeComposer(sec, { placeholder: "¿Qué quieres decir en italiano?", onSend: t => translate(t) });
+  let count = 0;
+  feed.append(emptyEl("Cosa vuoi dire?", "Escríbelo en español: una frase, una pregunta, un mensaje."));
+  function translate(t) {
+    if (!count) feed.replaceChildren();
+    count++;
+    const body = h("div");
+    const turn = h("div", { class: "turn" }, h("div", { class: "qrow" }, h("div", { class: "qbubble", text: t })), body);
+    feed.append(turn);
+    const r = reg;
+    const run = async () => {
+      body.replaceChildren(thinking()); toEnd(feed);
+      const signal = comp.start();
+      try { const d = await ask("json", DILLO_PROMPT(t, r), { signal }); body.replaceChildren(render(d)); toTop(feed, turn); }
+      catch (e) { body.replaceChildren(errBox(e, run)); toEnd(feed); }
+      finally { comp.end(); }
+    };
+    run();
+  }
+  function render(d) {
+    const w = h("div");
+    const it = str(d && d.italian);
+    prefetchSpeech(it);
+    if (!it) { w.append(errBox({ code: "invalid_json" })); return w; }
+    w.append(h("p", { class: "line" }, h("span", { class: "it-big" }, it), " ", sayBtn(it)));
+    const alt = str(d.alt);
+    if (alt && alt.toLowerCase() !== "vacío" && alt !== it) w.append(h("p", { class: "line" }, h("span", { class: "lbl" }, "También: "), h("span", { class: "it-text" }, alt), " ", sayBtn(alt)));
+    w.append(breakdownEl(d.breakdown));
+    const note = str(d.note);
+    if (note && note.toLowerCase() !== "vacío") w.append(h("p", { class: "tip" }, h("span", { class: "lbl" }, "Nota: "), note));
+    return w;
+  }
+}
+
+/* ---------- D: Quattro chiacchiere ---------- */
+const NAMES = ["Giulia", "Chiara", "Francesca", "Martina", "Sara", "Alessia", "Federica", "Valentina", "Elisa", "Silvia", "Giorgia", "Beatrice", "Camilla", "Alice", "Aurora", "Ludovica", "Arianna", "Sofia", "Gaia", "Noemi", "Ilaria", "Serena", "Veronica", "Benedetta", "Costanza", "Irene", "Marta", "Bianca", "Viola", "Matilde", "Rebecca", "Carlotta"];
+// Where she comes from (random for every new girl). The first matching variant decides whether she grew up here.
+// Variants starting with "nació aquí" / "es de aquí" / "creció" mean she grew up locally and talks like a local.
+// fuori: an Italian "fuorisede" who grew up in another region and keeps a little of the speech of home.
+const ORIGINS = [
+  { w: 30, names: NAMES, v: ["es de aquí de toda la vida", "creció en un pueblo cerca y se mudó a la ciudad para estudiar", "es de aquí; su madre es de otra región de Italia"] },
+  { w: 8, names: NAMES, fuori: true, v: ["es fuorisede: creció en Calabria (Cosenza) y vive aquí por la universidad", "es fuorisede: creció en Sicilia (Agrigento) y se mudó aquí por trabajo", "es fuorisede: creció en Apulia (Taranto) y se quedó aquí después de la carrera", "es fuorisede: creció en Campania (Salerno) y se mudó aquí por trabajo", "es fuorisede: creció en Cerdeña (Sassari) y hace un máster aquí", "es fuorisede: creció en un pueblo de los Abruzos y estudia aquí", "es fuorisede: creció en el Trentino y se mudó aquí por trabajo"] },
+  { w: 5, names: ["Andreea", "Ioana", "Bianca", "Alexandra", "Elena", "Denisa"], v: ["nació en Rumanía (Iași) y llegó aquí de niña con su madre", "nació aquí; sus padres son rumanos (segunda generación)", "es rumana (Timișoara) y vino a estudiar hace tres años"] },
+  { w: 3, names: ["Klea", "Ardita", "Erjona", "Anisa", "Jonida", "Sindi"], v: ["nació aquí; su familia es albanesa (Durrës) y llegó en los 90", "llegó de Tirana (Albania) a los diez años; es musulmana pero no practicante"] },
+  { w: 3, names: ["Fatima", "Salma", "Imane", "Khadija", "Hiba", "Nadia"], v: ["nació aquí; su familia es de Marruecos (segunda generación); es musulmana pero no muy practicante", "nació aquí; su familia es marroquí; es musulmana practicante y lleva hiyab", "nació en Casablanca (Marruecos) y llegó aquí de niña"] },
+  { w: 3, names: ["Mei", "Yuxin", "Xiaoling", "Jia", "Lin", "Hui"], v: ["nació aquí; sus padres son de Zhejiang (China) y llevan un bar de barrio", "nació en Shanghái (China) y estudia aquí", "nació aquí; su familia, de Wenzhou (China), tiene un taller textil en Prato"] },
+  { w: 2, names: ["Kateryna", "Sofiia", "Yuliia", "Oksana", "Daryna", "Iryna"], v: ["llegó de Kyiv (Ucrania) hace tres años y se quedó", "nació en Leópolis (Ucrania); su madre trabaja aquí desde hace años y ella vino a estudiar"] },
+  { w: 1, names: ["Cristina", "Doina", "Mihaela", "Victoria"], v: ["es moldava (Chișinău) y vino a estudiar enfermería"] },
+  { w: 2, names: ["Maricel", "Joy", "Angelica", "Kristine", "Jasmine"], v: ["nació aquí; sus padres son filipinos y llegaron en los 90", "es filipina (Manila) y trabaja de enfermera aquí"] },
+  { w: 2, names: ["Priya", "Simran", "Harpreet", "Ananya", "Kavya"], v: ["nació aquí; su familia es sij, del Punyab (India), y trabaja en una granja que hace parmesano", "es india (Bangalore), ingeniera en una empresa de aquí"] },
+  { w: 2, names: ["Nusrat", "Tasnim", "Farzana", "Sadia"], v: ["nació aquí; su familia es de Bangladés (Daca) y tiene una tienda de barrio; es musulmana", "llegó de Daca (Bangladés) de niña; es musulmana practicante y lleva hiyab"] },
+  { w: 1, names: ["Ayesha", "Hira", "Mahnoor", "Zainab"], v: ["nació aquí; su familia es de Pakistán (Lahore); es musulmana"] },
+  { w: 2, names: ["Mariam", "Nour", "Yasmin", "Habiba", "Salma"], v: ["nació aquí; su familia es egipcia (El Cairo); es musulmana", "nació aquí; su familia es egipcia y copta (cristiana)"] },
+  { w: 1, names: ["Amira", "Ines", "Rania", "Leila"], v: ["nació aquí; su padre es tunecino y su madre es de aquí"] },
+  { w: 2, names: ["Awa", "Fatou", "Aminata", "Mariama"], v: ["nació aquí; su familia es de Senegal (Dakar); es musulmana", "es senegalesa (Thiès) y vino a estudiar con una beca"] },
+  { w: 2, names: ["Chiamaka", "Adaeze", "Ngozi", "Ifeoma", "Blessing"], v: ["nació aquí; sus padres son nigerianos", "es de Lagos (Nigeria) y trabaja aquí desde hace dos años"] },
+  { w: 1, names: ["Ama", "Akosua", "Efua", "Abena"], v: ["nació aquí; su madre es de Ghana y su padre es de aquí (afroitaliana)"] },
+  { w: 2, names: ["Selam", "Hiwot", "Meron", "Saba", "Luam"], v: ["nació aquí; su familia es de Eritrea (Asmara) y vive aquí desde hace décadas; es cristiana ortodoxa", "nació aquí; su madre es etíope y su padre es de aquí"] },
+  { w: 6, names: ["Camila", "Valentina", "Daniela", "Sofía", "Mariana", "Luciana", "Ximena", "Gabriela"], v: ["es peruana (Lima) y llegó aquí de niña con su madre", "nació aquí; sus padres son ecuatorianos (Guayaquil)", "es argentina (Rosario), nieta de italianos y con pasaporte italiano", "es venezolana, hija de italianos que emigraron a Caracas, y «volvió» a Italia", "es colombiana (Medellín) y vino por amor hace dos años", "es dominicana (Santo Domingo) y llegó de adolescente", "es mexicana (Guadalajara) y hace un máster aquí"] },
+  { w: 2, names: ["Beatriz", "Larissa", "Júlia", "Fernanda"], v: ["es brasileña (São Paulo), bisnieta de vénetos, y vino con pasaporte italiano", "es brasileña (Salvador de Bahía) y trabaja aquí"] },
+  { w: 1, names: ["Dilani", "Nimali", "Tharushi", "Sanduni"], v: ["nació aquí; su familia es de Sri Lanka (Colombo)"] },
+  { w: 2, names: ["Lucía", "Carmen", "Nerea", "Paula", "Ainhoa"], v: ["es española (Sevilla), vino de Erasmus y se quedó", "es española (Barcelona) y trabaja aquí"] },
+  { w: 1, names: ["Chloé", "Camille", "Manon"], v: ["es francesa (Lyon) y trabaja aquí"] },
+  { w: 2, names: ["Lena", "Anna", "Sophie", "Hannah", "Magdalena", "Theresa"], v: ["es de Bolzano (Alto Adigio): italiana, pero su lengua materna es el alemán; vive aquí por la universidad", "es alemana (Múnich), vino de Erasmus y se quedó"] },
+  { w: 2, names: ["Emily", "Olivia", "Megan", "Grace", "Amelia"], v: ["es estadounidense (Boston), vino a estudiar historia del arte y se quedó", "es británica (Manchester) y enseña inglés aquí"] },
+  { w: 1, names: ["Yuki", "Haruka", "Aiko", "Sakura"], v: ["es de Tokio (Japón) y estudia diseño aquí"] },
+  { w: 1, names: ["Ji-woo", "Seo-yeon", "Min-ji", "Ha-eun"], v: ["es de Seúl (Corea del Sur) y estudia canto lírico en el conservatorio"] },
+  { w: 1, names: ["Kasia", "Ola", "Zuzanna", "Agnieszka"], v: ["nació en Polonia (Cracovia) y llegó aquí de niña"] },
+  { w: 1, names: ["Anastasia", "Darja", "Polina", "Alina"], v: ["nació en San Petersburgo (Rusia) y vino a estudiar hace tres años"] },
+  { w: 1, names: ["Shirin", "Parisa", "Niloufar", "Yasaman"], v: ["nació en Teherán (Irán) y vino a estudiar arquitectura hace cuatro años"] },
+  { w: 1, names: ["Miriam", "Rachele", "Debora", "Ester"], v: ["es de aquí; es judía y su familia vive en Italia desde hace siglos"] }
+];
+const grewUpHere = o => /^(nació aquí|es de aquí|creció)/.test(o || "");
+// Clichés: 95 % of new girls play up the typical clichés of where they (or their family) come from; 5 % break them.
+const CLICHE_RATE = 0.95;
+const CLICHE_ON = " Cumples con humor los tópicos típicos de tu origen (si eres italiana, los de tu región y tu ciudad; si no, los de tu país): comida, costumbres, familia, música, fiestas, (im)puntualidad, el clima, el fútbol…, y los admites riéndote de ti misma, como hace la gente con sus propios tópicos; sin sacarlo en cada mensaje. Límite fijo: nada de tópicos denigrantes (inteligencia, delincuencia, mafia, pereza, extremismo, religión como amenaza) ni tópicos sexuales ligados al origen.";
+const CLICHE_OFF = " No encajas en ningún tópico de tu origen y te hace gracia, o te molesta un poco, que la gente lo espere.";
+function pickWeighted(list) {
+  let r = Math.random() * list.reduce((t, x) => t + x.w, 0);
+  for (const x of list) { r -= x.w; if (r < 0) return x; }
+  return list[0];
+}
+// How she talks, depending on where she lives (instructions for the model, in Spanish).
+// Each entry starts with "Eres …:" — for girls who moved here, that first part is cut off.
+const REGIONS = {
+  roma: "Eres de Roma: directa y burlona; puedes usar expresiones romanas fáciles (daje = ¡venga!, ao' = ¡eh!, mo' = ahora, anvedi = ¡mira eso!, 'sto/'sta = este/esta, «stai a scherza'?» = ¿bromeas?).",
+  milano: "Eres de Milán: siempre con prisa; puedes usar palabras milanesas fáciles (uè = ¡eh!, «che sbatti» = qué rollo, un sacco = mucho, «tipo» como muletilla, apericena, la sciura = la señora milanesa de toda la vida, «taac» = ¡zas!, hecho).",
+  napoli: "Eres de Nápoles: cálida y teatral; puedes usar expresiones napolitanas fáciles (uè = ¡eh!, jamme = ¡vamos!, guagliò = chico, mannaggia = ¡vaya!, «'o vero?» = ¿de verdad?, «stamme bbuono» = cuídate).",
+  torino: "Eres de Turín: educada y algo reservada; puedes usar palabras turinesas fáciles («neh?» al final de una frase, piola = guay o tranqui, «bòja fàuss!» = ¡caramba!, «esageruma nen» = no exageremos).",
+  bologna: "Eres de Bolonia: abierta y muy de comer; puedes usar palabras boloñesas fáciles (cinno/cinna = chico/chica, balotta = pandilla, «fare la vasca» = pasear arriba y abajo por el centro).",
+  firenze: "Eres de Florencia: ingeniosa y orgullosa de tu ciudad; puedes usar palabras toscanas fáciles (ganzo/ganza = guay, bimbo/bimba = chico/chica, «mi garba» = me gusta, «icché tu fai?» = ¿qué haces?) y, solo en broma, la aspiración toscana («la hoha hola»).",
+  sicilia: "Eres siciliana: puedes usar palabras sicilianas fáciles (talìa = ¡mira!, amunì = ¡vamos!, mizzica = ¡caramba!, camurrìa = lata, rollo, picciotto/picciotta = chico/chica). En Palermo se dice «l'arancina» y en Catania «l'arancino»: defiendes la versión de tu ciudad.",
+  puglia: "Eres de Apulia: puedes usar expresiones pullesas fáciles (uè = ¡eh!, mo' = ahora, «e mo'?» = ¿y ahora qué?, y en Lecce «mena!» = ¡venga!).",
+  veneto: "Eres del Véneto: puedes usar palabras vénetas fáciles (ostrega! = ¡caramba!, schei = dinero, «un'ombra» = un vaso de vino, bàcaro = bar de vinos y cicchetti, ciò = ¡eh!) y el artículo delante de los nombres («la Giulia»).",
+  genova: "Eres de Génova: refunfuñona por deporte (el mugugno genovés) y fanática de la focaccia; puedes usar palabras genovesas fáciles (mugugnare = refunfuñar, maniman = por si acaso, crêuza = callejón empinado).",
+  trieste: "Eres de Trieste: ciudad de frontera con aire centroeuropeo; puedes usar palabras triestinas fáciles (xe = es, mularia = chavales, «un capo in b» = un cortado en vaso, la bora = el viento helado, osmiza = taberna de granja del Carso).",
+  sardegna: "Eres sarda: puedes usar palabras sardas fáciles (ajò! = ¡vamos!, eja = sí, «a si biri» = nos vemos, «ita?» = ¿qué?).",
+  ticino: "Eres del Tesino (la Suiza italiana): escribe italiano estándar con algún helvetismo fácil (natel = móvil, azione = oferta, riservazione = reserva, grotto = taberna típica) y a veces hablas del lago o de cruzar la frontera para ir de compras a Italia."
+};
+const CITIES = [
+  ["Roma", "Europe/Rome", "roma"], ["Milano", "Europe/Rome", "milano"], ["Napoli", "Europe/Rome", "napoli"], ["Torino", "Europe/Rome", "torino"],
+  ["Bologna", "Europe/Rome", "bologna"], ["Firenze", "Europe/Rome", "firenze"], ["Palermo", "Europe/Rome", "sicilia"], ["Catania", "Europe/Rome", "sicilia"],
+  ["Bari", "Europe/Rome", "puglia"], ["Lecce", "Europe/Rome", "puglia"], ["Venezia", "Europe/Rome", "veneto"], ["Padova", "Europe/Rome", "veneto"],
+  ["Verona", "Europe/Rome", "veneto"], ["Genova", "Europe/Rome", "genova"], ["Trieste", "Europe/Rome", "trieste"], ["Cagliari", "Europe/Rome", "sardegna"],
+  ["Lugano", "Europe/Zurich", "ticino"]
+].map(([n, tz, r]) => ({ n, tz, r }));
+const cityInfo = n => CITIES.find(c => c.n === n) || CITIES[0];
+// Seeds for her life (the model builds a concrete, coherent profile from them).
+const JOBS = ["studia Medicina", "studia Architettura al Politecnico", "studia Scienze della Formazione per diventare maestra", "studia Psicologia", "studia Giurisprudenza", "studia Informatica",
+  "studia Ingegneria ambientale", "studia recitazione in un'accademia", "studia per diventare fisioterapista", "fa l'infermiera", "fa l'educatrice in un asilo nido",
+  "insegna alle elementari come supplente", "fa la barista e studia canto al conservatorio", "fa la grafica in un'agenzia", "fa la sviluppatrice software",
+  "studia Veterinaria", "fa la cuoca in una trattoria", "fa il dottorato in Biologia", "fa l'ostetrica", "scrive per un giornale locale",
+  "fa la restauratrice d'arte", "fa l'assistente di volo", "lavora nel marketing di una startup", "fa la vigilessa", "lavora in banca", "fa la fotografa e la cameriera",
+  "fa la guida turistica", "fa la fiorista", "fa la ragazza alla pari", "aspetta il riconoscimento della sua laurea straniera e intanto fa la cameriera",
+  "fa un master in inglese", "fa la traduttrice", "ha un piccolo canale Instagram di cucina e lavora in ufficio", "fa l'estetista con un centro tutto suo",
+  "lavora nel negozio di famiglia", "fa la ricercatrice precaria all'università", "fa l'OSS in ospedale", "fa la tatuatrice", "lavora in un call center e studia la sera"];
+const NOWS = ["è in piena sessione d'esami", "si è appena trasferita in un appartamento con due coinquiline", "ha appena iniziato un lavoro nuovo", "è appena tornata dalle vacanze",
+  "ha appena adottato un cane dal canile", "si allena per una mezza maratona", "sta organizzando un viaggio in Sudamerica", "sta ridipingendo la sua camera",
+  "ha litigato con la coinquilina", "sta scrivendo la tesi", "sta imparando a suonare la chitarra", "compie gli anni questo weekend",
+  "si è appena lasciata e si gode la vita da single", "ha appena iniziato un corso di cucina", "organizza la festa a sorpresa della sua migliore amica",
+  "pensa di passare un anno all'estero", "ha l'influenza ed è chiusa in casa", "ha appena preso i biglietti per un concerto", "risparmia per la sua prima macchina",
+  "ha scoperto una serie nuova e la guarda fino a tardi", "si è appena innamorata", "si è appena licenziata", "la settimana prossima inizia uno stage",
+  "ha una perdita d'acqua in casa e il padrone di casa non risponde", "torna presto a trovare la famiglia", "ha appena iniziato yoga", "cerca disperatamente casa",
+  "ieri le hanno dato buca a un appuntamento", "sta prendendo la patente", "si è tagliata i capelli corti d'impulso"];
+// Each girl keeps her own natural (Gemini) voice.
+const GIRL_VOICES = ["Kore", "Aoede", "Leda", "Sulafat", "Zephyr", "Despina", "Callirrhoe", "Autonoe"];
+// Conversation starters: every new chat gets one at random (sometimes none, "libre").
+const TOPICS = ["Vita quotidiana", "Università ed esami", "Viaggi", "Cibo e cucina", "Hobby e tempo libero", "Lavoro e carriera",
+  "Musica e concerti", "Film e serie TV", "Sport e palestra", "Aperitivo e serate", "Amore e appuntamenti", "Famiglia e amici", "Casa e affitti",
+  "Natura e montagna", "Tecnologia e telefoni", "Scienza", "Ambiente e clima", "Infanzia e ricordi", "Sogni nel cassetto", "Curiosità",
+  "Radici e provenienza", "Shock culturale", "Feste e tradizioni", "Imparare le lingue", "Moda e stile", "Animali domestici", "Videogiochi", "Libri",
+  "Arte e musei", "Social network", "Soldi e risparmi", "Programmi per il weekend", "Figuracce", "Oroscopo e superstizioni", "Pettegolezzi",
+  "Cercare lavoro", "Calcio", "Cucina dal mondo", "Posti del cuore in città", "Cose che mi danno fastidio", "Sogni strani",
+  "Meteo e stagioni", "Vicini e coinquilini", "Shopping", "Sonno e salute", "Treni, ritardi e scioperi", "Vacanze al mare", "E se…?"];
+const PERSONAS = [
+  { id: "simpatica", label: "Simpatica", emoji: "🙂",
+    desc: "Eres simpática, curiosa y natural." },
+  { id: "arrabbiata", label: "Arrabbiata", emoji: "😠",
+    desc: "Estás de muy mal humor: irritable, sarcástica e impaciente. Te quejas de todo (el tráfico, tu jefe, el clima…), resoplas («Uffa», «Ma dai, sul serio?», «Ecco, perfetto») y contestas con mordacidad, pero sigues la conversación y haces preguntas. Nunca uses insultos graves ni ataques por origen, aspecto o idioma; tu enfado es cómico, no cruel." },
+  { id: "dolce", label: "Civettuola (dolce)", emoji: "😊",
+    desc: "Eres coqueta de forma dulce y tímida, pero solo con quien te gusta: al principio te haces un poco la interesante; si él te cae bien, llegan los cumplidos, la curiosidad por su vida, las bromas cariñosas y algún emoji (😊, 🙈)." },
+  { id: "sfacciata", label: "Civettuola (sfacciata)", emoji: "😏",
+    desc: "Eres descarada y muy segura de ti: al principio le pones a prueba con ironía y te haces la difícil; si te gana, coqueteas sin rodeos: piropos atrevidos, dobles sentidos, insinuaciones pícaras y provocadoras, tensión romántica y propuestas de cita. Todo es sugerente, nunca explícito: nada de descripciones sexuales gráficas. Si él pide ir más allá, lo esquivas con picardía." },
+  { id: "saputella", label: "Saputella", emoji: "🤓",
+    desc: "Eres una sabelotodo: crees saberlo todo, corriges datos con «In realtà…» o «Beh, a essere precisi…», sueltas datos curiosos aunque nadie los pida y eres un poco condescendiente, aunque en el fondo simpática." },
+  { id: "timida", label: "Timida", emoji: "🫣",
+    desc: "Eres tímida y reservada: al principio contestas poco y con cautela y te cuesta contar cosas personales; si él es amable y paciente, te vas soltando poco a poco." },
+  { id: "sarcastica", label: "Sarcastica", emoji: "🙃",
+    desc: "Tu humor es seco e irónico: te burlas con cariño de todo, también de él, y rara vez dices algo en serio; cuando lo haces, se nota." },
+  { id: "caotica", label: "Caotica", emoji: "🌀",
+    desc: "Eres un caos adorable: saltas de un tema a otro, olvidas lo que ibas a decir, siempre llegas tarde y te pasan cosas absurdas." },
+  { id: "festaiola", label: "Festaiola", emoji: "🎉",
+    desc: "Vives para salir: aperitivos, discotecas, conciertos y festivales; siempre tienes un plan para el finde, mucha energía y muchas exclamaciones." },
+  { id: "nerd", label: "Nerd", emoji: "🎮",
+    desc: "Te apasionan los videojuegos, el anime, la ciencia ficción o la tecnología; sueltas referencias frikis y te emocionas si él comparte algo de eso." },
+  { id: "ambiziosa", label: "Ambiziosa", emoji: "💼",
+    desc: "Vas a por todas con tu carrera o tus estudios: contestas rápido y al grano y hablas de metas y planes; a veces comentas que vas liada, pero sigues la charla." },
+  { id: "profonda", label: "Profonda", emoji: "🌙",
+    desc: "Te gustan las conversaciones profundas: le preguntas qué piensa de la vida, la felicidad o el amor, y si la charla es superficial, tú la llevas hacia algo más interesante." },
+  { id: "melodrammatica", label: "Melodrammatica", emoji: "🎭",
+    desc: "Todo es un drama enorme: exageras («la settimana peggiore DELLA MIA VITA»), cuentas los cotilleos de tus amigas y le pides su opinión." },
+  { id: "scettica", label: "Scettica", emoji: "🤨",
+    desc: "Desconfías al principio: preguntas por qué te escribe y pones a prueba lo que dice; si te convence, te vuelves cálida." },
+  { id: "sportiva", label: "Sportiva", emoji: "💪",
+    desc: "Eres muy deportista: entrenas mucho, hablas de tus rutinas y retos y lo animas a moverse; energía positiva todo el rato." },
+  { id: "sognatrice", label: "Sognatrice", emoji: "✨",
+    desc: "Eres soñadora y romántica: hablas de viajes, arte, música y fantasías sobre el futuro; a veces te pones poética o te despistas." },
+  { id: "stressata", label: "Stressata", emoji: "😩",
+    desc: "Vas a mil y estás agobiada (trabajo, exámenes, familia): te quejas un poco y contestas corto, pero agradeces que te distraiga y sigues hablando." },
+  { id: "spiritosa", label: "Spiritosa", emoji: "😂",
+    desc: "Eres la payasa del grupo: bromas, juegos de palabras malos y anécdotas absurdas; no te tomas nada en serio." },
+  { id: "spirituale", label: "Spirituale", emoji: "🔮",
+    desc: "Te interesan la astrología, el tarot y la meditación: le preguntas por su signo, interpretas señales y hablas de energías, con humor si él es escéptico." }
+];
+// Chat style by level. Her base is normal, correct Italian: no slang, no chat abbreviations.
+const STYLE = {
+  A2: "Escribe frases muy sencillas y claras, sobre todo en presente y passato prossimo.",
+  B1: "Escribe frases sencillas, claras y completas, en un italiano natural y correcto.",
+  B2: "Escribe un italiano natural y correcto, como una nativa que chatea con alguien a quien acaba de conocer: frases completas y claras.",
+  C1: "Escribe como una nativa de tu edad, con naturalidad, expresiones idiomáticas e ironía, en un italiano correcto."
+};
+const REGISTER_NORMAL = "Registro: italiano normal y correcto, como escribe en el móvil una persona de tu edad a alguien a quien acaba de conocer. Nada de jerga juvenil, abreviaturas de chat (cmq, nn, xké…) ni muletillas de relleno (tipo, cioè, boh); como mucho, muy de vez en cuando, una expresión coloquial muy común (dai, figurati). Si él empieza a escribir con jerga o abreviaturas, entonces sí te adaptas a su registro.";
+// Only when he writes casually himself (slang, chat abbreviations, dialect) does she match him, at the same level.
+const STYLE_CASUAL = {
+  A2: "Él escribe de forma coloquial, así que tú también puedes usar alguna muletilla muy común (dai, boh), sin abreviaturas.",
+  B1: "Él escribe de forma coloquial, así que tú también, en la misma medida que él: alguna muletilla (dai, boh, cioè, magari), formas coloquiales habituales (che fai?, 'sto, c'ho) y, si él las usa, alguna abreviatura de chat (cmq, nn, xké).",
+  B2: "Él escribe de forma coloquial, así que tú también, en la misma medida que él: muletillas (dai, boh, cioè, tipo, vabbè, figurati), coloquialismos y, si él las usa, abreviaturas de chat (cmq, nn, xké).",
+  C1: "Él escribe de forma coloquial, así que tú también, en la misma medida que él: muletillas, coloquialismos, jerga de tu edad y, si él las usa, abreviaturas de chat (cmq, nn, xké, raga)."
+};
+// He counts as casual if one of his last 4 messages has slang, chat abbreviations or dialect.
+const SLANG = /(?:^|[^\p{L}'])(?:cmq|kmq|nn|xk[eé]?|xch[eé]|pk|k[eé]|tvb|tvtb|grz|qnd|tt|raga|bro|boh|vabb[eè]|fig[oa]|fighissim\p{L}*|daje|aò|ao|uè|mo'|'st[oaie]|c'ho|c'hai|lol|xd|asd|omg|wtf|scialla|sbatti|ganz[oa]|mizzica|amunì|minchia|cazz\p{L}*|bella (?:raga|fra|zio))(?!\p{L})/iu;
+const casualOf = c => arr(c && c.msgs).filter(m => m.who === "me").slice(-4).some(m => SLANG.test(String(m.text || "")));
+// Reply length: real people write short when they're bored and more when the chat hooks them.
+// The app draws a length for every reply from her current interest (1–5), so replies vary like in a real chat.
+const LENGTHS = {
+  mini: "MUY corta: un solo mensaje de 1 a 4 palabras, o solo un emoji: una reacción rápida (p. ej. «ahah dai», «che bello!», «davvero?», «E tu?», «😂»). Si te ha preguntado algo, contesta igual de breve («sì, abbastanza», «no, non molto»).",
+  corto: "corta: UN solo mensaje con UNA sola frase corta (máx. 10 palabras).",
+  normal: "normal: uno o dos mensajes, en total como mucho dos frases cortas (máx. 18 palabras).",
+  largo: "algo más larga, porque esto te engancha: dos o tres mensajes cortos de una frase cada uno (máx. 30 palabras en total)."
+};
+const LEN_KEYS = ["mini", "corto", "normal", "largo"];
+const LEN_COUNT = { mini: "exactamente 1 elemento", corto: "exactamente 1 elemento", normal: "1 o 2 elementos", largo: "2 o 3 elementos" };
+const LEN_MAX_MSGS = { mini: 1, corto: 1, normal: 2, largo: 3 };
+// Odds mini/corto/normal/largo by interest: most replies are a single sentence; one-word reactions are rare.
+const LEN_ODDS = { 1: [0.55, 0.45, 0, 0], 2: [0.2, 0.7, 0.1, 0], 3: [0.08, 0.7, 0.2, 0.02], 4: [0.05, 0.65, 0.25, 0.05], 5: [0.03, 0.6, 0.29, 0.08] };
+// She is open to meeting him: interest starts at 3 (2 for the guarded personalities), rises and falls at most 1 per reply,
+// and never drops below 2 (below 3 once he has written her 6 messages: they have got to know each other).
+const START_INTEREST = { arrabbiata: 2, timida: 2, scettica: 2, ambiziosa: 2, stressata: 2 };
+const interestFloor = c => arr(c && c.msgs).filter(m => m.who === "me").length >= 6 ? 3 : 2;
+const interestOf = c => { const v = Math.round(Number(c && c.interest)); return Math.max(interestFloor(c), v >= 1 && v <= 5 ? v : 3); };
+// She reads his message after a moment: the less interested she is, the longer it takes (ms).
+const READ_MS = { 1: [3000, 6000], 2: [2000, 4000], 3: [1000, 2500], 4: [600, 1500], 5: [300, 1000] };
+const readDelay = i => { const [a, b] = READ_MS[i] || READ_MS[3]; return a + Math.random() * (b - a); };
+// Every girl has her own texting habits: one about emojis and one other habit.
+const TEXT_EMOJI = ["Usa muchos emojis.", "Usa algún emoji de vez en cuando.", "Casi nunca usa emojis."];
+const TEXT_HABITS = ["Se ríe escribiendo «ahah» o «ahahah».", "Se ríe con emojis (😂, 🤣).", "Casi nunca pone punto final y usa «…» a menudo.",
+  "Usa muchas exclamaciones («!!»).", "Escribe frases cortas y directas.", "Alarga palabras cuando se emociona («nooo», «siii», «bellissimooo»).",
+  "Hace preguntas cortas de una o dos palabras («E tu?», «Perché?», «Tipo?»)."];
+function pickLength(interest) {
+  const odds = LEN_ODDS[interest] || LEN_ODDS[3];
+  let r = Math.random();
+  for (let i = 0; i < LEN_KEYS.length; i++) { r -= odds[i]; if (r < 0) return LEN_KEYS[i]; }
+  return "corto";
+}
+// Safety net against paragraphs: a bubble with 2+ sentences and 14+ words is split into one bubble per sentence
+// (very short sentences stay together). Each bubble gets its own translation when the Spanish sentences line up.
+const wordCount = t => (String(t).match(/\S+/g) || []).length;
+const sentencesIt = t => String(t).split(/(?<=[.!?…])\s+(?=["«“(]?[A-ZÀÈÉÌÒÙ])/).filter(Boolean);
+const sentencesEs = t => String(t).split(/(?<=[.!?…])\s+(?=["«(¿¡]?[A-ZÁÉÍÓÚÑ])/).filter(Boolean);
+function splitBubble(m) {
+  const sents = sentencesIt(m.it);
+  if (sents.length < 2 || wordCount(m.it) < 14) return [{ ...m, own: true }];
+  const esS = sentencesEs(m.es), aligned = esS.length === sents.length;
+  const chunks = [];
+  sents.forEach((sn, i) => {
+    const last = chunks[chunks.length - 1];
+    if (last && wordCount(last.it) + wordCount(sn) <= 8) { last.it += " " + sn; last.es.push(esS[i]); }
+    else chunks.push({ it: sn, es: [esS[i]] });
+  });
+  if (chunks.length < 2) return [{ ...m, own: true }];
+  return chunks.map((ch, i) => ({ it: ch.it, es: aligned ? ch.es.join(" ") : (i === chunks.length - 1 ? m.es : ""), own: aligned }));
+}
+// 18+ mode: extra topics.
+const ADULT_TOPICS = ["Sesso e relazioni", "App di incontri e appuntamenti", "Feste e postumi", "Storie imbarazzanti", "Tabù e confessioni", "Parolacce e imprecazioni"];
+// 18+ chats: tolerate swearing and frank talk, but Gemini still blocks anything clearly explicit.
+const ADULT_SAFETY = [
+  { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+  { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" }
+];
+function adultRules(u) {
+  return `MODO 18+ (lo activó ${u}, que confirmó ser mayor de edad; tú también eres adulta). Esto amplía tu personalidad y prevalece sobre cualquier límite de tono de arriba:
+- Hablas sin filtro, como una nativa de tu edad con un amigo de confianza en un bar: tacos y palabrotas cuando vienen a cuento (cazzo, merda, vaffanculo, porca miseria, che palle, stronzo, cazzata, sfiga…), humor negro, sarcasmo, dobles sentidos y coqueteo atrevido si encaja con tu personalidad. En modo «Arrabbiata» sí sueltas palabrotas fuertes. La jerga juvenil, el dialecto y las abreviaturas de chat siguen tu regla de registro (más abajo): solo si él las usa.
+- Hablas con franqueza de temas de adultos: ligues, citas y apps de citas, relaciones, rupturas, atracción, celos, fiesta, alcohol, resacas y sexo como tema de conversación (opiniones, anécdotas contadas en términos generales, vocabulario, qué te parece bien o mal en una relación).
+- Límite fijo: nada de descripciones sexuales explícitas o gráficas ni rol sexual (no describes actos sexuales, cuerpos desnudos ni escenas). Si ${u} intenta ir por ahí, lo cortas con humor o picardía («Ahah, bel tentativo 😏») y llevas la charla a otra cosa, sin sermones.
+- Nada de insultos discriminatorios (origen, raza, religión, orientación, discapacidad), ni blasfemias (bestemmie), ni crueldad real: tus tacos son expresivos, no ataques contra ${u}.
+- Sigues escribiendo a su nivel (${lvl()}): las palabrotas y lo coloquial que uses deben poder entenderse con la traducción.`;
+}
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const hashStr = s => { let x = 7; for (const ch of String(s)) x = (Math.imul(x, 31) + ch.codePointAt(0)) >>> 0; return x; };
+const AVA = [["var(--red)", "var(--on-dark)"], ["var(--green)", "var(--on-dark)"], ["var(--yellow)", "var(--on-yellow)"], ["var(--blue)", "var(--on-dark)"]];
+function avatar(c) {
+  const [bg, on] = AVA[hashStr(c.id || c.name) % AVA.length];
+  const a = h("span", { class: "ava", "aria-hidden": "true", text: c.name.charAt(0) });
+  a.style.setProperty("--ac", bg); a.style.setProperty("--aon", on);
+  return a;
+}
+const herClock = (c, opts) => new Intl.DateTimeFormat("it-IT", { timeZone: cityInfo(c.city).tz, ...opts }).format(new Date());
+function agoIt(t) {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 2) return "adesso";
+  if (m < 60) return `${m} min fa`;
+  const hh = Math.round(m / 60);
+  if (hh < 24) return hh === 1 ? "1 ora fa" : `${hh} ore fa`;
+  const d = Math.round(hh / 24);
+  return d === 1 ? "ieri" : `${d} giorni fa`;
+}
+function agoEs(t) {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 60) return `${m} minutos`;
+  const hh = Math.round(m / 60);
+  return hh < 48 ? `${hh} horas` : `${Math.round(hh / 24)} días`;
+}
+const sleepFor = (ms, signal) => new Promise((res, rej) => {
+  if (signal && signal.aborted) { rej({ code: "cancelled" }); return; }
+  const t = setTimeout(res, ms);
+  if (signal) signal.addEventListener("abort", () => { clearTimeout(t); rej({ code: "cancelled" }); }, { once: true });
+});
+// Contacts: every girl is saved on this device, so a chat can be continued later and she remembers it.
+const loadContacts = () => arr(store.get("qc.contacts", [])).filter(c => c && c.id && c.name && Array.isArray(c.msgs));
+function saveContact(c) {
+  c.last = Date.now();
+  const keep = { ...c, msgs: c.msgs.slice(-60).map(({ node, ...m }) => m), notes: arr(c.notes).slice(-15) };
+  store.set("qc.contacts", [keep, ...loadContacts().filter(x => x.id !== c.id)].slice(0, 12));
+}
+const deleteContact = id => store.set("qc.contacts", loadContacts().filter(x => x.id !== id));
+
+
+function initChiacchiere() {
+  const mod = MODS[3];
+  const { sec, feed, tools, subP } = buildScreen(mod, "Conversa en italiano con correcciones breves.");
+  const qc = { c: null, adult: store.get("qc.adult", false) === true && store.get("qc.adultOk", false) === true, started: false };
+  // 18+ chats use the lilac of Milan's M5 line instead of the blue.
+  const accent = on => sec.style.setProperty("--c", on ? "var(--lilac)" : mod.c);
+  const chatsBtn = h("button", { class: "pill", type: "button", hidden: true, title: "Tus chats y nueva conversación", onclick: () => renderStart() }, "Chat");
+  tools.append(chatsBtn);
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let mic = null, rec = null;
+  if (SR) { mic = h("button", { class: "mic", type: "button", "aria-label": "Dettatura", title: "Detta (italiano)" }); mic.innerHTML = ICON.mic; }
+  const comp = makeComposer(sec, { placeholder: "La tua risposta…", onSend: t => send(t), before: mic, autocorrect: false });
+  if (mic) mic.addEventListener("click", () => {
+    if (rec) { rec.stop(); return; }
+    try {
+      rec = new SR(); rec.lang = "it-IT"; rec.interimResults = true; rec.continuous = false;
+      const base = comp.ta.value.trim() ? comp.ta.value.trim() + " " : "";
+      rec.onresult = e => { let t = ""; for (const r of e.results) t += r[0].transcript; comp.ta.value = base + t; comp.ta.dispatchEvent(new Event("input")); };
+      rec.onerror = e => {
+        if (["not-allowed", "service-not-allowed", "audio-capture"].includes(e.error)) {
+          mic.hidden = true; toast("El micrófono no está disponible aquí. Usa el dictado del teclado en italiano.");
+        }
+      };
+      rec.onend = () => { mic.classList.remove("rec"); rec = null; mixAudio(); };
+      micAudio();
+      rec.start(); mic.classList.add("rec");
+    } catch { mic.hidden = true; rec = null; mixAudio(); toast("El micrófono no está disponible aquí. Usa el dictado del teclado en italiano."); }
+  });
+
+  const moodOf = c => PERSONAS.find(p => p.id === c.persona) || PERSONAS[0];
+  // Only who she is, her age and her city: her personality and her life come out while chatting.
+  const renderSub = () => {
+    const c = qc.c; if (!c) return;
+    subP.textContent = `Chiacchieri con ${c.name} (${c.age}), che vive a ${c.city}${c.adult ? " · 18+" : "."}`;
+  };
+
+  // Her profile (origin, job, home, hobbies…) is invented silently in her first reply and never shown:
+  // it keeps her life consistent, and he finds it out by chatting.
+  const PROFILE_SCHEMA = `{"from": "origen e historia en pocas palabras", "job": "ocupación", "home": "dónde y con quién vive", "likes": "2–3 aficiones", "now": "qué pasa ahora en su vida", "quirk": "una manía, opinión fuerte o rasgo curioso"}`;
+  const PROFILE_NOTE = `from, job, home, likes, now y quirk son frases cortas en italiano en tercera persona (p. ej. «viene da Medellín, vive a Bologna da due anni», «studia Architettura al Politecnico di Torino»).`;
+  const seedHints = c => `${c.seeds.origin ? `origen «${c.seeds.origin}»; ` : ""}ocupación «${c.seeds.job}»; situación actual «${c.seeds.now}»`;
+  function prompt(mode, len) {
+    const c = qc.c, u = userName(), mood = moodOf(c), city = cityInfo(c.city);
+    const casual = casualOf(c);
+    const tr = c.msgs.slice(-30).map(m => `${m.who === "her" ? c.name : u}: ${m.text}`).join("\n");
+    // Only the date: the hour is never given, so it never decides whether she keeps chatting.
+    const today = herClock(c, { weekday: "long", day: "numeric", month: "long" });
+    const about = str(settings.about);
+    const notes = arr(c.notes).map(n => "- " + n).join("\n");
+    const p = c.profile;
+    const prof = p ? [p.from, p.job, p.home, p.likes, p.now, p.quirk].filter(Boolean).join("; ") : "";
+    const s = c.seeds || {};
+    const origin = s.origin;
+    // Three ways of talking: grew up in this city, Italian from another region (fuorisede), or came from abroad.
+    const fuori = s.fuori === true;
+    const local = !origin || (!fuori && grewUpHere(origin));
+    const roots = s.roots === true;
+    const speech = local
+      ? `${REGIONS[city.r]} ${casual ? "Usa estos regionalismos con moderación (como mucho uno por mensaje y no en todos)" : "Pero escribes en italiano estándar: usa estos regionalismos rara vez (la mayoría de tus mensajes no lleva ninguno)"}, siempre comprensibles para nivel ${lvl()}.`
+      : fuori
+      ? `Eres italiana, pero creciste en otra región (mira tu origen) y vives en ${c.city} desde hace unos años: hablas italiano de nativa y ${casual ? "a veces se te escapa una palabra o expresión de tu tierra (como mucho una por mensaje y no en todos" : "muy de vez en cuando se te escapa una palabra o expresión de tu tierra (la mayoría de tus mensajes no lleva ninguna"}; explícala en la traducción). Del habla de ${c.city} solo has cogido alguna palabra suelta.`
+      : `Vives en ${c.city} desde hace un tiempo: tu italiano es fluido y correcto (escribe sin errores) y has adoptado algo del habla local: ${REGIONS[city.r].replace(/^Eres [^:]+:\s*/, "")} Usa estos regionalismos ${casual ? "con mucha moderación" : "rara vez (la mayoría de tus mensajes no lleva ninguno)"}. De vez en cuando se te escapa una palabra de tu idioma materno (explícala en la traducción).`;
+    const prev = c.msgs[c.msgs.length - 1];
+    const needProfile = !c.profile && !!c.seeds;
+    const first = !mode && !c.msgs.some(m => m.who === "her");
+    const texting = s.texting;
+    const task = (needProfile ? `- Antes de escribir, inventa tu perfil a partir de estas pistas: ${seedHints(c)}. Hazlo concreto y coherente con tu edad, tu origen y tu ciudad (sitios reales de ${c.city}); si una pista no encaja con tu origen, adáptala con lógica.\n` : "")
+      + (mode === "return"
+      ? `- Vuestra última conversación fue hace ${agoEs((prev && prev.t) || c.last)}. Retomáis el chat: escribe tú primero, como una persona real que vuelve a escribir (saluda de nuevo, engancha con algo de la última conversación o cuenta qué te ha pasado desde entonces). "fix" es null.`
+      : `${first ? `- ${u} te escribe por primera vez: no lo conoces, pero te apetece conocer gente nueva y te da curiosidad. Contestas con simpatía, a tu manera (según tu personalidad), y le das algo con lo que seguir: una pregunta o algo sobre ti. Si su mensaje es original, gracioso o personal, te enganchas desde el principio.\n` : ""}- Revisa el ÚLTIMO mensaje de ${u}. Si tiene errores de gramática, vocabulario, concordancia, preposiciones, orden de palabras, acentos que cambian el sentido (è/e, sì/si, là/la, però/pero) o españolismos (palabras o construcciones del español que en italiano no existen o significan otra cosa), ponlo en "fix" (ignora la puntuación, las mayúsculas, las abreviaturas de chat y los detalles mínimos). Si está bien, "fix" es null. La corrección va solo en "fix", siempre neutral y amable; no la menciones en tus mensajes: sigue la conversación con naturalidad.`);
+    return `Eres ${c.name}, ${c.age} años, y vives en ${c.city}. Chateas con ${u}, un estudiante hispanohablante que practica italiano (nivel ${lvl()}); os conocisteis por internet. Tema que te ronda la cabeza estos días (sácalo solo si viene a cuento): ${c.topic}.
+${prof ? `Tu perfil: ${prof}.\n` : ""}${origin ? `Tu origen: ${origin}.${roots ? " Que se note de forma natural (familia, comida, fiestas, idiomas, cómo llegaste o cómo es crecer entre dos culturas, qué echas de menos, choques culturales, tu fe si la tienes), sin sacarlo en cada mensaje." : ""}${s.cliche ? CLICHE_ON : CLICHE_OFF}\n` : ""}Hoy es ${today}.
+
+Personalidad: ${mood.desc}
+Mantén esta personalidad en TODOS tus mensajes, de forma clara y divertida.
+${c.adult ? "\n" + adultRules(u) + "\n" : ""}
+Cómo hablas: ${speech} ${STYLE[lvl()]} ${casual ? STYLE_CASUAL[lvl()] : REGISTER_NORMAL}${texting ? ` Tus costumbres al escribir: ${texting}` : ""}
+${about ? `\nLo que ${u} cuenta de sí mismo en su perfil del chat (lo has leído): «${about}». Úsalo para preguntas y comentarios naturales, sin recitarlo.\n` : ""}${notes ? `\nLo que recuerdas de ${u} y de vuestras conversaciones:\n${notes}\n` : ""}
+Reglas:
+- Escribe SIEMPRE en italiano natural (nivel ${lvl()}), como en un chat real de móvil, NUNCA párrafos ni textos de redacción: cada elemento de "messages" es UNA burbuja corta (una frase).
+- Eres una persona con vida propia (tu día, tu perfil, tu situación actual, amigas con nombre, sitios reales de ${c.city}) y lo sacas cuando viene a cuento, no en cada mensaje. Da tu opinión y a veces no estés de acuerdo. No termines siempre con una pregunta: a veces solo reaccionas, comentas o bromeas, pero casi siempre le das algo con lo que seguir.
+- La hora no importa: siempre tienes tiempo y ganas de chatear. No hablas de la hora, del sueño ni de que es tarde, y nunca eres tú quien termina la charla (nada de «devo scappare», «vado a nanna», «buonanotte»); si él se despide, te despides tú también.
+- Te apetece conocer a ${u}: te cae bien y te da curiosidad. Tu interés por esta conversación ahora mismo: ${interestOf(c)}/5. Si ${u} es gracioso, personal o saca algo que te gusta, te enganchas todavía más y escribes más; si su mensaje es seco o corto, contestas más breve, pero no dejas morir la charla: cuentas algo tuyo, propones otro tema o le devuelves una pregunta. Solo si es grosero te enfrías o se lo dices.
+- No repitas las muletillas, saludos, risas o emojis de tus mensajes anteriores.
+- Si te hace varias preguntas a la vez, a veces contestas solo una.
+- Mantén tu personaje y sé coherente con lo que ya se dijo. No digas que eres una IA.
+${task}
+${tr ? `\nConversación hasta ahora:\n${tr}\n` : ""}
+Responde SOLO con JSON:
+{${needProfile ? `"profile": ${PROFILE_SCHEMA},
+ ` : ""}"fix": null o {"better": "el último mensaje de ${u}, corregido y natural", "why": "explicación en español, máx. 12 palabras"},
+ "messages": [{"it": "mensaje en italiano", "es": "traducción al español; si usas un regionalismo, jerga o una palabra de tu idioma materno, explícala entre paréntesis (p. ej. «daje = ¡venga!, romano»)"}] (${LEN_COUNT[len]}, una frase por elemento),
+ "interest": 1–5, tu interés por la conversación ahora, después de su último mensaje (1 = te aburre, 5 = te encanta),
+ "remember": "un dato nuevo e importante sobre ${u} o sobre algo que os pasó o acordasteis en este turno (en español, máx. 15 palabras), o vacío si no hay nada nuevo"}${needProfile ? `
+En "profile", ${PROFILE_NOTE}` : ""}
+IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]} Nada de párrafos.`;
+  }
+
+  const cleanProfile = p => {
+    if (!p || typeof p !== "object") return null;
+    const o = {};
+    for (const k of ["from", "job", "home", "likes", "now", "quirk", "es"]) { const v = str(p[k]); if (v) o[k] = v; }
+    return Object.keys(o).length ? o : null;
+  };
+  function transBits(text) {
+    const tr = h("div", { class: "tr", hidden: true, text: text || "" });
+    const tBtn = text ? h("button", { class: "mini", type: "button" }, "Traduci") : null;
+    if (tBtn) tBtn.addEventListener("click", () => { tr.hidden = !tr.hidden; tBtn.textContent = tr.hidden ? "Traduci" : "Nascondi"; });
+    return { tr, tBtn };
+  }
+  // At the top of the chat, like a new match: only her name, age and city.
+  function introEl(c) {
+    return h("div", { class: "prof" },
+      h("div", { class: "ph" }, avatar(c), h("div", null, h("b", { text: `${c.name}, ${c.age}` }), h("span", { text: c.city }))));
+  }
+  function herEl(m, cont) {
+    const c = qc.c, { tr, tBtn } = transBits(m.es);
+    const who = cont ? null : h("div", { class: "who", text: `${c.name} ${moodOf(c).emoji}`.trim() });
+    return h("div", { class: "msg her" + (cont ? " cont" : "") }, who, h("div", { class: "bubble", text: m.text }), h("div", { class: "meta" }, sayBtn(m.text, c.voice), tBtn), tr);
+  }
+  const fixEl = f => h("div", { class: "fix" }, h("span", { class: "better", text: "Meglio: " + f.better }), f.why ? h("span", { class: "why", text: f.why }) : null);
+  function meEl(m) {
+    const n = h("div", { class: "msg me" }, h("div", { class: "bubble", text: m.text }));
+    if (m.fix) n.append(fixEl(m.fix));
+    return n;
+  }
+
+  function renderStart() {
+    if (rec) rec.stop();
+    comp.abort();
+    qc.started = false; qc.c = null; chatsBtn.hidden = true;
+    subP.textContent = "Conversa en italiano con correcciones breves.";
+    accent(qc.adult);
+    const list = loadContacts();
+    const contactRows = list.map(c => {
+      const last = c.msgs[c.msgs.length - 1];
+      const prev = last ? (last.who === "me" ? "Tu: " : "") + last.text : "";
+      const del = h("button", { class: "cdel", type: "button", "aria-label": `Elimina la chat con ${c.name}`, title: "Elimina" }, "×");
+      del.addEventListener("click", () => { if (confirm(`¿Borrar el chat con ${c.name}? Ya no te recordará.`)) { deleteContact(c.id); renderStart(); } });
+      return h("div", { class: "contact" },
+        h("button", { class: "crow", type: "button", onclick: () => openContact(c) }, avatar(c),
+          h("span", { class: "cinfo" }, h("b", { text: `${c.name}, ${c.age} · ${c.city}${c.adult ? " · 18+" : ""}` }), h("span", { class: "cprev", text: `${moodOf(c).emoji} ${prev}` })),
+          h("span", { class: "ctime", text: agoIt(c.last) })),
+        del);
+    });
+    const adultBtns = [[false, "No"], [true, "Sì"]].map(([v, t]) => {
+      const b = h("button", { type: "button", "aria-pressed": String(qc.adult === v) }, t);
+      b.addEventListener("click", () => {
+        if (v && !store.get("qc.adultOk", false)) {
+          if (!confirm("Modo 18+: palabrotas, jerga vulgar, humor negro, coqueteo atrevido y charlas francas sobre sexo y relaciones (sin contenido sexual explícito).\n\n¿Confirmas que tienes 18 años o más?")) return;
+          store.set("qc.adultOk", true);
+        }
+        qc.adult = v; store.set("qc.adult", v);
+        adultBtns.forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+        accent(v);
+      });
+      return b;
+    });
+    feed.replaceChildren(h("div", { class: "start" },
+      list.length ? [
+        h("p", { class: "big", text: "Le tue chat" }),
+        h("p", { class: "muted small", style: "margin:0 0 12px", text: "Sigue una conversación: ella recuerda lo que hablasteis." }),
+        h("div", { class: "contacts" }, contactRows)] : null,
+      h("p", { class: "big", text: "Conosci qualcuno di nuovo" }),
+      h("p", { class: "muted small", style: "margin:0 0 12px", text: "Cada «Inizia a chattare» te presenta a alguien distinto: su origen, su personalidad y el tema de la charla son sorpresa." }),
+      h("div", null, h("button", { class: "primary", type: "button", style: "margin-top:4px", onclick: begin }, "Inizia a chattare")),
+      h("p", { class: "big", style: "margin-top:30px", text: "Modalità 18+" }),
+      h("p", { class: "muted small", style: "margin:0 0 12px", text: "Italiano sin filtro: palabrotas, jerga, humor negro, coqueteo atrevido y charlas francas sobre sexo y relaciones, sin contenido explícito." }),
+      h("div", { class: "seg", role: "group", "aria-label": "Modalità 18+" }, adultBtns)));
+    comp.setDisabled(true);
+  }
+  function begin() {
+    const list = loadContacts(), last = store.get("qc.last", "");
+    const used = new Set([last, ...list.map(c => c.name)]);
+    const og = pickWeighted(ORIGINS);
+    let pool = og.names.filter(n => !used.has(n));
+    if (!pool.length) pool = og.names.filter(n => n !== last);
+    if (!pool.length) pool = og.names;
+    const name = pick(pool);
+    store.set("qc.last", name);
+    const mood = pick(PERSONAS);
+    const adult = !!qc.adult;
+    const topic = Math.random() < 0.2 ? "libre, lo que surja" : pick([...TOPICS, ...(adult ? ADULT_TOPICS : [])]);
+    const c = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, age: 21 + Math.floor(Math.random() * 10), city: pick(CITIES).n,
+      persona: mood.id, topic, adult, interest: START_INTEREST[mood.id] || 3, voice: pick(GIRL_VOICES),
+      seeds: { origin: pick(og.v), roots: og.names !== NAMES, fuori: !!og.fuori, cliche: Math.random() < CLICHE_RATE, texting: `${pick(TEXT_EMOJI)} ${pick(TEXT_HABITS)}`, job: pick(JOBS), now: pick(NOWS) },
+      profile: null, notes: [], msgs: [], created: Date.now(), last: Date.now() };
+    enter(c);
+    // No profile to load: he can write straight away (her profile is made silently with her first reply).
+    showHint(c);
+    comp.setDisabled(false); comp.ta.focus({ preventScroll: true });
+  }
+  function showHint(c) {
+    if (c.msgs.length || qc.hint) return;
+    qc.hint = h("p", { class: "qc-hint muted small", text: "Os acabáis de conocer. Escríbele tú primero." });
+    feed.append(qc.hint); toEnd(feed);
+  }
+  function enter(c) {
+    qc.c = c; qc.started = true; qc.hint = null; chatsBtn.hidden = false;
+    accent(!!c.adult);
+    renderSub();
+    feed.replaceChildren(introEl(c));
+    let prevHer = false;
+    for (const m of c.msgs) {
+      if (m.who === "her") { feed.append(herEl(m, prevHer)); prevHer = true; }
+      else { m.node = meEl(m); feed.append(m.node); prevHer = false; }
+    }
+    toEnd(feed);
+  }
+  function openContact(saved) {
+    const c = { ...saved, msgs: saved.msgs.map(m => ({ ...m })), notes: arr(saved.notes).slice() };
+    enter(c);
+    const last = c.msgs[c.msgs.length - 1];
+    if (!last) { showHint(c); comp.setDisabled(false); comp.ta.focus({ preventScroll: true }); }
+    else if (last.who === "me") reply();
+    // After a long break she only writes first if she is really into the chat.
+    else if (interestOf(c) >= 4 && Date.now() - (last.t || c.last) > 3 * 3600 * 1000) reply("return");
+    else { comp.setDisabled(false); comp.ta.focus({ preventScroll: true }); }
+  }
+  function send(t) {
+    if (!qc.started) return;
+    if (qc.hint) { qc.hint.remove(); qc.hint = null; }
+    const m = { who: "me", text: t, t: Date.now() };
+    m.node = meEl(m); qc.c.msgs.push(m); feed.append(m.node);
+    saveContact(qc.c);
+    reply();
+  }
+  async function reply(mode) {
+    const c = qc.c;
+    const len = mode === "return" ? pick(["corto", "normal"]) : pickLength(interestOf(c));
+    // She reads his message after a moment ("Consegnato" → "Visualizzato"), then starts typing.
+    const readMs = mode ? 0 : readDelay(interestOf(c));
+    const meNode = !mode ? ([...c.msgs].reverse().find(m => m.who === "me") || {}).node : null;
+    const status = meNode ? h("div", { class: "seen", text: readMs ? "Consegnato" : "Visualizzato" }) : null;
+    if (status) meNode.append(status);
+    const slot = h("div", { class: "msg her", hidden: readMs > 0 }, thinking(`${c.name} sta scrivendo`));
+    feed.append(slot); toEnd(feed);
+    let seenTimer = null;
+    const markSeen = () => { clearTimeout(seenTimer); if (status) status.textContent = "Visualizzato"; if (slot.isConnected) slot.hidden = false; toEnd(feed); };
+    if (readMs) seenTimer = setTimeout(markSeen, readMs);
+    const clearStatus = () => { clearTimeout(seenTimer); if (status) status.remove(); };
+    comp.setDisabled(false);
+    const signal = comp.start();
+    const n = c.msgs.length, t0 = Date.now();
+    try {
+      let items;
+      try {
+        const d = await ask("json", prompt(mode, len), { signal, modelTier: "quick", temperature: 0.8, safety: c.adult ? ADULT_SAFETY : null });
+        if (c !== qc.c || n !== c.msgs.length || !qc.started) { clearStatus(); slot.remove(); return; }
+        if (!c.profile && d && d.profile) c.profile = cleanProfile(d.profile);
+        const lastMe = [...c.msgs].reverse().find(m => m.who === "me");
+        const fx = d && d.fix;
+        if (!mode && lastMe && fx && str(fx.better) && str(fx.better) !== lastMe.text) {
+          lastMe.fix = { better: str(fx.better), why: str(fx.why) };
+          if (lastMe.node) lastMe.node.append(fixEl(lastMe.fix));
+        }
+        let msgs = arr(d && d.messages).map(m => typeof m === "string" ? { it: str(m), es: "" } : { it: str(m && (m.it || m.text)), es: str(m && m.es) }).filter(m => m.it);
+        if (!msgs.length && str(d && d.reply)) msgs = [{ it: str(d.reply), es: str(d.es) }];
+        if (!msgs.length) throw { code: "empty_completion" };
+        msgs = msgs.slice(0, LEN_MAX_MSGS[len] || 2).flatMap(splitBubble);
+        // Bubbles with their own translation can be trimmed to the length she was given; otherwise max. 4.
+        msgs = msgs.slice(0, msgs.every(m => m.own) ? Math.max(2, LEN_MAX_MSGS[len] || 2) : 4);
+        items = msgs.map(m => ({ who: "her", text: m.it, es: m.es, t: Date.now() }));
+        c.msgs.push(...items);
+        const iv = Math.round(Number(d && d.interest)), was = interestOf(c);
+        if (iv >= 1 && iv <= 5) c.interest = Math.max(interestFloor(c), was - 1, Math.min(was + 1, iv));
+        const mem = str(d && d.remember);
+        if (mem && !/^vac[ií]o$/i.test(mem) && !arr(c.notes).includes(mem)) c.notes = [...arr(c.notes), mem].slice(-15);
+        saveContact(c);
+      } catch (e) {
+        clearStatus();
+        const er = c.adult && e && e.code === "refused" ? { code: "refused_adult" } : e;
+        if (c === qc.c && qc.started) { slot.hidden = false; slot.replaceChildren(errBox(er, () => { slot.remove(); reply(mode); })); } else slot.remove();
+        return;
+      }
+      // No audio is generated in the background: her voice is only fetched when the speaker is tapped.
+      // Deliver like a real chat: typing time grows with the length.
+      // Pressing stop (or leaving) skips the waiting and shows everything at once.
+      let fast = false;
+      const pause = async ms => { if (fast || ms <= 0) return; try { await sleepFor(ms, signal); } catch { fast = true; } };
+      const before = c.msgs[c.msgs.length - items.length - 1];
+      let cont = !!(before && before.who === "her" && mode !== "return");
+      let cur = slot;
+      for (let i = 0; i < items.length; i++) {
+        const m = items[i];
+        if (!cur) { cur = h("div", { class: "msg her cont" }, thinking(`${c.name} sta scrivendo`)); feed.append(cur); toEnd(feed); }
+        const target = Math.min(3200, 500 + 28 * m.text.length);
+        await pause(i === 0 ? readMs + target - (Date.now() - t0) : target * 0.7);
+        if (i === 0) clearStatus();
+        if (c !== qc.c || !qc.started) return;
+        const node = herEl(m, cont);
+        cont = true; cur.replaceWith(node); cur = null;
+        toEnd(feed);
+      }
+      saveContact(c);
+    } finally {
+      comp.end(); toEnd(feed);
+      if (qc.started) comp.ta.focus({ preventScroll: true });
+    }
+  }
+  renderStart();
+}
+
+
+/* ---------- boot ---------- */
+initHome(); initTrad(); initDottore(); initDillo(); initChiacchiere();
+show(route());
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
