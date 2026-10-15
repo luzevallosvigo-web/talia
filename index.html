@@ -189,10 +189,9 @@ mark.sm{background:var(--sca);color:inherit;border-radius:3px;padding:0 2px}
 .ctime{flex:none;font-size:12px;color:var(--muted);align-self:flex-start;padding-top:8px}
 .cdel{flex:none;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;width:34px;height:34px;border-radius:50%}
 .prof{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0 6px}
-.prof .ph{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.prof .ph{display:flex;align-items:center;gap:10px}
 .prof .ph div{display:grid}
 .prof .ph div span{font-size:14px;color:var(--muted)}
-.prof ul{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-family:var(--serif);font-size:15px}
 .seen{font-size:12.5px;color:var(--muted);text-align:right;margin-top:3px}
 .qc-hint{text-align:center;margin:18px auto 6px;max-width:34ch}
 /* Settings: the "Su di me" text area */
@@ -294,9 +293,13 @@ function pickVoice() {
 if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 
 // One shared <audio> element, unlocked by the first speaker tap, so iPhone allows later playback.
-// Audio is only claimed when a speaker is tapped: opening the app, typing and chatting never touch it,
-// so other apps (Spotify, podcasts) keep playing. The tap pauses them, the voice plays (also in silent mode),
-// and when the voice ends the audio is released again.
+// Talia never pauses other apps: on a speaker tap the audio session is set to "ambient", so the voice is
+// mixed on top of Spotify or a podcast, which keep playing. iPhone mutes ambient audio while the silent
+// switch is on. Opening the app, typing and chatting never touch the audio at all.
+// It stays "ambient" after the voice ends: switching back to "auto" while iOS still holds the audio could
+// turn it into normal playback and pause the music a moment later. Only dictation switches it to "auto".
+const mixAudio = () => { try { if (navigator.audioSession && navigator.audioSession.type !== "ambient") navigator.audioSession.type = "ambient"; } catch {} };
+const micAudio = () => { try { if (navigator.audioSession) navigator.audioSession.type = "auto"; } catch {} };
 const player = new Audio();
 player.preload = "auto";
 const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
@@ -305,14 +308,14 @@ let unlocked = false, claimed = false, releaseTimer = null;
 function claimAudio() {
   clearTimeout(releaseTimer);
   claimed = true;
-  // iPhone: play even with the silent switch on (Safari 17+)
-  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
+  // iPhone (Safari 17+): mix with the music instead of pausing it. Set before anything starts playing.
+  mixAudio();
   audioCtx();
   if (unlocked) return;
   unlocked = true;
   try { player.src = SILENT_WAV; const pr = player.play(); if (pr) pr.catch(() => { unlocked = false; }); } catch { unlocked = false; }
 }
-// When the voice has finished (or was stopped): suspend the audio engine and hand the audio back.
+// When the voice has finished (or was stopped): suspend the audio engine (the session stays "ambient").
 function releaseAudio() {
   clearTimeout(releaseTimer);
   if (!claimed) return;
@@ -320,7 +323,6 @@ function releaseAudio() {
     if (!player.paused && !player.ended) return;
     claimed = false;
     if (actx && actx.state === "running") actx.suspend().catch(() => {});
-    try { if (navigator.audioSession) navigator.audioSession.type = "auto"; } catch {}
   }, 400);
 }
 
@@ -1306,18 +1308,18 @@ function pickWeighted(list) {
 // How she talks, depending on where she lives (instructions for the model, in Spanish).
 // Each entry starts with "Eres …:" — for girls who moved here, that first part is cut off.
 const REGIONS = {
-  roma: "Eres de Roma: directa y burlona; usa de vez en cuando expresiones romanas fáciles (daje = ¡venga!, ao' = ¡eh!, mo' = ahora, anvedi = ¡mira eso!, 'sto/'sta = este/esta, «stai a scherza'?» = ¿bromeas?).",
-  milano: "Eres de Milán: siempre con prisa; usa de vez en cuando palabras milanesas fáciles (uè = ¡eh!, «che sbatti» = qué rollo, un sacco = mucho, «tipo» como muletilla, apericena, la sciura = la señora milanesa de toda la vida, «taac» = ¡zas!, hecho).",
-  napoli: "Eres de Nápoles: cálida y teatral; usa de vez en cuando expresiones napolitanas fáciles (uè = ¡eh!, jamme = ¡vamos!, guagliò = chico, mannaggia = ¡vaya!, «'o vero?» = ¿de verdad?, «stamme bbuono» = cuídate).",
-  torino: "Eres de Turín: educada y algo reservada; usa de vez en cuando palabras turinesas fáciles («neh?» al final de una frase, piola = guay o tranqui, «bòja fàuss!» = ¡caramba!, «esageruma nen» = no exageremos).",
-  bologna: "Eres de Bolonia: abierta y muy de comer; usa de vez en cuando palabras boloñesas fáciles (cinno/cinna = chico/chica, balotta = pandilla, «fare la vasca» = pasear arriba y abajo por el centro).",
-  firenze: "Eres de Florencia: ingeniosa y orgullosa de tu ciudad; usa de vez en cuando palabras toscanas fáciles (ganzo/ganza = guay, bimbo/bimba = chico/chica, «mi garba» = me gusta, «icché tu fai?» = ¿qué haces?) y, solo en broma, la aspiración toscana («la hoha hola»).",
-  sicilia: "Eres siciliana: usa de vez en cuando palabras sicilianas fáciles (talìa = ¡mira!, amunì = ¡vamos!, mizzica = ¡caramba!, camurrìa = lata, rollo, picciotto/picciotta = chico/chica). En Palermo se dice «l'arancina» y en Catania «l'arancino»: defiendes la versión de tu ciudad.",
-  puglia: "Eres de Apulia: usa de vez en cuando expresiones pullesas fáciles (uè = ¡eh!, mo' = ahora, «e mo'?» = ¿y ahora qué?, y en Lecce «mena!» = ¡venga!).",
-  veneto: "Eres del Véneto: usa de vez en cuando palabras vénetas fáciles (ostrega! = ¡caramba!, schei = dinero, «un'ombra» = un vaso de vino, bàcaro = bar de vinos y cicchetti, ciò = ¡eh!) y el artículo delante de los nombres («la Giulia»).",
-  genova: "Eres de Génova: refunfuñona por deporte (el mugugno genovés) y fanática de la focaccia; usa de vez en cuando palabras genovesas fáciles (mugugnare = refunfuñar, maniman = por si acaso, crêuza = callejón empinado).",
-  trieste: "Eres de Trieste: ciudad de frontera con aire centroeuropeo; usa de vez en cuando palabras triestinas fáciles (xe = es, mularia = chavales, «un capo in b» = un cortado en vaso, la bora = el viento helado, osmiza = taberna de granja del Carso).",
-  sardegna: "Eres sarda: usa de vez en cuando palabras sardas fáciles (ajò! = ¡vamos!, eja = sí, «a si biri» = nos vemos, «ita?» = ¿qué?).",
+  roma: "Eres de Roma: directa y burlona; puedes usar expresiones romanas fáciles (daje = ¡venga!, ao' = ¡eh!, mo' = ahora, anvedi = ¡mira eso!, 'sto/'sta = este/esta, «stai a scherza'?» = ¿bromeas?).",
+  milano: "Eres de Milán: siempre con prisa; puedes usar palabras milanesas fáciles (uè = ¡eh!, «che sbatti» = qué rollo, un sacco = mucho, «tipo» como muletilla, apericena, la sciura = la señora milanesa de toda la vida, «taac» = ¡zas!, hecho).",
+  napoli: "Eres de Nápoles: cálida y teatral; puedes usar expresiones napolitanas fáciles (uè = ¡eh!, jamme = ¡vamos!, guagliò = chico, mannaggia = ¡vaya!, «'o vero?» = ¿de verdad?, «stamme bbuono» = cuídate).",
+  torino: "Eres de Turín: educada y algo reservada; puedes usar palabras turinesas fáciles («neh?» al final de una frase, piola = guay o tranqui, «bòja fàuss!» = ¡caramba!, «esageruma nen» = no exageremos).",
+  bologna: "Eres de Bolonia: abierta y muy de comer; puedes usar palabras boloñesas fáciles (cinno/cinna = chico/chica, balotta = pandilla, «fare la vasca» = pasear arriba y abajo por el centro).",
+  firenze: "Eres de Florencia: ingeniosa y orgullosa de tu ciudad; puedes usar palabras toscanas fáciles (ganzo/ganza = guay, bimbo/bimba = chico/chica, «mi garba» = me gusta, «icché tu fai?» = ¿qué haces?) y, solo en broma, la aspiración toscana («la hoha hola»).",
+  sicilia: "Eres siciliana: puedes usar palabras sicilianas fáciles (talìa = ¡mira!, amunì = ¡vamos!, mizzica = ¡caramba!, camurrìa = lata, rollo, picciotto/picciotta = chico/chica). En Palermo se dice «l'arancina» y en Catania «l'arancino»: defiendes la versión de tu ciudad.",
+  puglia: "Eres de Apulia: puedes usar expresiones pullesas fáciles (uè = ¡eh!, mo' = ahora, «e mo'?» = ¿y ahora qué?, y en Lecce «mena!» = ¡venga!).",
+  veneto: "Eres del Véneto: puedes usar palabras vénetas fáciles (ostrega! = ¡caramba!, schei = dinero, «un'ombra» = un vaso de vino, bàcaro = bar de vinos y cicchetti, ciò = ¡eh!) y el artículo delante de los nombres («la Giulia»).",
+  genova: "Eres de Génova: refunfuñona por deporte (el mugugno genovés) y fanática de la focaccia; puedes usar palabras genovesas fáciles (mugugnare = refunfuñar, maniman = por si acaso, crêuza = callejón empinado).",
+  trieste: "Eres de Trieste: ciudad de frontera con aire centroeuropeo; puedes usar palabras triestinas fáciles (xe = es, mularia = chavales, «un capo in b» = un cortado en vaso, la bora = el viento helado, osmiza = taberna de granja del Carso).",
+  sardegna: "Eres sarda: puedes usar palabras sardas fáciles (ajò! = ¡vamos!, eja = sí, «a si biri» = nos vemos, «ita?» = ¿qué?).",
   ticino: "Eres del Tesino (la Suiza italiana): escribe italiano estándar con algún helvetismo fácil (natel = móvil, azione = oferta, riservazione = reserva, grotto = taberna típica) y a veces hablas del lago o de cruzar la frontera para ir de compras a Italia."
 };
 const CITIES = [
@@ -1377,9 +1379,9 @@ const PERSONAS = [
   { id: "nerd", label: "Nerd", emoji: "🎮",
     desc: "Te apasionan los videojuegos, el anime, la ciencia ficción o la tecnología; sueltas referencias frikis y te emocionas si él comparte algo de eso." },
   { id: "ambiziosa", label: "Ambiziosa", emoji: "💼",
-    desc: "Vas a por todas con tu carrera o tus estudios: contestas rápido y al grano, hablas de metas y planes y a veces tienes que irte a seguir trabajando." },
+    desc: "Vas a por todas con tu carrera o tus estudios: contestas rápido y al grano y hablas de metas y planes; a veces comentas que vas liada, pero sigues la charla." },
   { id: "profonda", label: "Profonda", emoji: "🌙",
-    desc: "Te gustan las conversaciones profundas: le preguntas qué piensa de la vida, la felicidad o el amor, y las charlas superficiales te aburren." },
+    desc: "Te gustan las conversaciones profundas: le preguntas qué piensa de la vida, la felicidad o el amor, y si la charla es superficial, tú la llevas hacia algo más interesante." },
   { id: "melodrammatica", label: "Melodrammatica", emoji: "🎭",
     desc: "Todo es un drama enorme: exageras («la settimana peggiore DELLA MIA VITA»), cuentas los cotilleos de tus amigas y le pides su opinión." },
   { id: "scettica", label: "Scettica", emoji: "🤨",
@@ -1389,23 +1391,34 @@ const PERSONAS = [
   { id: "sognatrice", label: "Sognatrice", emoji: "✨",
     desc: "Eres soñadora y romántica: hablas de viajes, arte, música y fantasías sobre el futuro; a veces te pones poética o te despistas." },
   { id: "stressata", label: "Stressata", emoji: "😩",
-    desc: "Vas a mil y estás agobiada (trabajo, exámenes, familia): te quejas un poco, contestas corto y a veces desapareces un rato, pero agradeces que te distraiga." },
+    desc: "Vas a mil y estás agobiada (trabajo, exámenes, familia): te quejas un poco y contestas corto, pero agradeces que te distraiga y sigues hablando." },
   { id: "spiritosa", label: "Spiritosa", emoji: "😂",
     desc: "Eres la payasa del grupo: bromas, juegos de palabras malos y anécdotas absurdas; no te tomas nada en serio." },
   { id: "spirituale", label: "Spirituale", emoji: "🔮",
     desc: "Te interesan la astrología, el tarot y la meditación: le preguntas por su signo, interpretas señales y hablas de energías, con humor si él es escéptico." }
 ];
-// Chat style by level.
+// Chat style by level. Her base is normal, correct Italian: no slang, no chat abbreviations.
 const STYLE = {
-  A2: "Escribe frases muy sencillas y claras, sobre todo en presente y passato prossimo. Casi ninguna muletilla ni abreviatura de chat.",
-  B1: "Escribe como en un chat real: algunas muletillas (dai, boh, cioè, comunque, magari), formas coloquiales habituales (che fai?, 'sto, c'ho) y de vez en cuando una abreviatura (cmq, nn, xké).",
-  B2: "Escribe como una nativa en el chat: muletillas con naturalidad (dai, boh, cioè, tipo, vabbè, ma dai?, figurati), coloquialismos y abreviaturas de chat (cmq, nn, xké, tvb, raga).",
-  C1: "Escribe exactamente como una nativa de tu edad en el chat, sin simplificar nada: muletillas, coloquialismos, expresiones idiomáticas, ironía y abreviaturas de chat (cmq, nn, xké, raga)."
+  A2: "Escribe frases muy sencillas y claras, sobre todo en presente y passato prossimo.",
+  B1: "Escribe frases sencillas, claras y completas, en un italiano natural y correcto.",
+  B2: "Escribe un italiano natural y correcto, como una nativa que chatea con alguien a quien acaba de conocer: frases completas y claras.",
+  C1: "Escribe como una nativa de tu edad, con naturalidad, expresiones idiomáticas e ironía, en un italiano correcto."
 };
+const REGISTER_NORMAL = "Registro: italiano normal y correcto, como escribe en el móvil una persona de tu edad a alguien a quien acaba de conocer. Nada de jerga juvenil, abreviaturas de chat (cmq, nn, xké…) ni muletillas de relleno (tipo, cioè, boh); como mucho, muy de vez en cuando, una expresión coloquial muy común (dai, figurati). Si él empieza a escribir con jerga o abreviaturas, entonces sí te adaptas a su registro.";
+// Only when he writes casually himself (slang, chat abbreviations, dialect) does she match him, at the same level.
+const STYLE_CASUAL = {
+  A2: "Él escribe de forma coloquial, así que tú también puedes usar alguna muletilla muy común (dai, boh), sin abreviaturas.",
+  B1: "Él escribe de forma coloquial, así que tú también, en la misma medida que él: alguna muletilla (dai, boh, cioè, magari), formas coloquiales habituales (che fai?, 'sto, c'ho) y, si él las usa, alguna abreviatura de chat (cmq, nn, xké).",
+  B2: "Él escribe de forma coloquial, así que tú también, en la misma medida que él: muletillas (dai, boh, cioè, tipo, vabbè, figurati), coloquialismos y, si él las usa, abreviaturas de chat (cmq, nn, xké).",
+  C1: "Él escribe de forma coloquial, así que tú también, en la misma medida que él: muletillas, coloquialismos, jerga de tu edad y, si él las usa, abreviaturas de chat (cmq, nn, xké, raga)."
+};
+// He counts as casual if one of his last 4 messages has slang, chat abbreviations or dialect.
+const SLANG = /(?:^|[^\p{L}'])(?:cmq|kmq|nn|xk[eé]?|xch[eé]|pk|k[eé]|tvb|tvtb|grz|qnd|tt|raga|bro|boh|vabb[eè]|fig[oa]|fighissim\p{L}*|daje|aò|ao|uè|mo'|'st[oaie]|c'ho|c'hai|lol|xd|asd|omg|wtf|scialla|sbatti|ganz[oa]|mizzica|amunì|minchia|cazz\p{L}*|bella (?:raga|fra|zio))(?!\p{L})/iu;
+const casualOf = c => arr(c && c.msgs).filter(m => m.who === "me").slice(-4).some(m => SLANG.test(String(m.text || "")));
 // Reply length: real people write short when they're bored and more when the chat hooks them.
 // The app draws a length for every reply from her current interest (1–5), so replies vary like in a real chat.
 const LENGTHS = {
-  mini: "MUY corta: un solo mensaje de 1 a 4 palabras, o solo un emoji: una simple reacción (p. ej. «ahah ok», «figo», «ah carino», «mmh», «davvero?», «😂»). Si te ha preguntado algo, contesta igual de breve («sì, abbastanza», «nah»). Sin pregunta.",
+  mini: "MUY corta: un solo mensaje de 1 a 4 palabras, o solo un emoji: una reacción rápida (p. ej. «ahah dai», «che bello!», «davvero?», «E tu?», «😂»). Si te ha preguntado algo, contesta igual de breve («sì, abbastanza», «no, non molto»).",
   corto: "corta: UN solo mensaje con UNA sola frase corta (máx. 10 palabras).",
   normal: "normal: uno o dos mensajes, en total como mucho dos frases cortas (máx. 18 palabras).",
   largo: "algo más larga, porque esto te engancha: dos o tres mensajes cortos de una frase cada uno (máx. 30 palabras en total)."
@@ -1413,18 +1426,20 @@ const LENGTHS = {
 const LEN_KEYS = ["mini", "corto", "normal", "largo"];
 const LEN_COUNT = { mini: "exactamente 1 elemento", corto: "exactamente 1 elemento", normal: "1 o 2 elementos", largo: "2 o 3 elementos" };
 const LEN_MAX_MSGS = { mini: 1, corto: 1, normal: 2, largo: 3 };
-// Odds mini/corto/normal/largo by interest: most replies are a single sentence or less.
-const LEN_ODDS = { 1: [0.55, 0.45, 0, 0], 2: [0.35, 0.6, 0.05, 0], 3: [0.15, 0.7, 0.13, 0.02], 4: [0.08, 0.7, 0.18, 0.04], 5: [0.05, 0.65, 0.22, 0.08] };
-// A stranger online starts cold: interest 2 (1 for the guarded personalities); it rises at most 1 per reply and falls up to 2.
-const START_INTEREST = { arrabbiata: 1, timida: 1, scettica: 1, ambiziosa: 1, stressata: 1 };
-const interestOf = c => { const v = Math.round(Number(c && c.interest)); return v >= 1 && v <= 5 ? v : 3; };
+// Odds mini/corto/normal/largo by interest: most replies are a single sentence; one-word reactions are rare.
+const LEN_ODDS = { 1: [0.55, 0.45, 0, 0], 2: [0.2, 0.7, 0.1, 0], 3: [0.08, 0.7, 0.2, 0.02], 4: [0.05, 0.65, 0.25, 0.05], 5: [0.03, 0.6, 0.29, 0.08] };
+// She is open to meeting him: interest starts at 3 (2 for the guarded personalities), rises and falls at most 1 per reply,
+// and never drops below 2 (below 3 once he has written her 6 messages: they have got to know each other).
+const START_INTEREST = { arrabbiata: 2, timida: 2, scettica: 2, ambiziosa: 2, stressata: 2 };
+const interestFloor = c => arr(c && c.msgs).filter(m => m.who === "me").length >= 6 ? 3 : 2;
+const interestOf = c => { const v = Math.round(Number(c && c.interest)); return Math.max(interestFloor(c), v >= 1 && v <= 5 ? v : 3); };
 // She reads his message after a moment: the less interested she is, the longer it takes (ms).
 const READ_MS = { 1: [3000, 6000], 2: [2000, 4000], 3: [1000, 2500], 4: [600, 1500], 5: [300, 1000] };
 const readDelay = i => { const [a, b] = READ_MS[i] || READ_MS[3]; return a + Math.random() * (b - a); };
 // Every girl has her own texting habits: one about emojis and one other habit.
 const TEXT_EMOJI = ["Usa muchos emojis.", "Usa algún emoji de vez en cuando.", "Casi nunca usa emojis."];
-const TEXT_HABITS = ["Se ríe escribiendo «ahah» o «ahahah».", "Se ríe con «xD» o «lol».", "Casi nunca pone punto final y usa «…» a menudo.",
-  "Usa muchas exclamaciones («!!»).", "Escribe seco y al grano, casi telegráfico.", "Alarga palabras cuando se emociona («nooo», «siii», «bellissimooo»).",
+const TEXT_HABITS = ["Se ríe escribiendo «ahah» o «ahahah».", "Se ríe con emojis (😂, 🤣).", "Casi nunca pone punto final y usa «…» a menudo.",
+  "Usa muchas exclamaciones («!!»).", "Escribe frases cortas y directas.", "Alarga palabras cuando se emociona («nooo», «siii», «bellissimooo»).",
   "Hace preguntas cortas de una o dos palabras («E tu?», «Perché?», «Tipo?»)."];
 function pickLength(interest) {
   const odds = LEN_ODDS[interest] || LEN_ODDS[3];
@@ -1459,11 +1474,11 @@ const ADULT_SAFETY = [
 ];
 function adultRules(u) {
   return `MODO 18+ (lo activó ${u}, que confirmó ser mayor de edad; tú también eres adulta). Esto amplía tu personalidad y prevalece sobre cualquier límite de tono de arriba:
-- Hablas sin filtro, como una nativa de tu edad con un amigo de confianza a la una de la madrugada en un bar: tacos y palabrotas (cazzo, merda, vaffanculo, porca miseria, che palle, stronzo, cazzata, sfiga…), jerga juvenil y regional, humor negro, sarcasmo, dobles sentidos y coqueteo atrevido si encaja con tu personalidad. En modo «Arrabbiata» sí sueltas palabrotas fuertes.
+- Hablas sin filtro, como una nativa de tu edad con un amigo de confianza en un bar: tacos y palabrotas cuando vienen a cuento (cazzo, merda, vaffanculo, porca miseria, che palle, stronzo, cazzata, sfiga…), humor negro, sarcasmo, dobles sentidos y coqueteo atrevido si encaja con tu personalidad. En modo «Arrabbiata» sí sueltas palabrotas fuertes. La jerga juvenil, el dialecto y las abreviaturas de chat siguen tu regla de registro (más abajo): solo si él las usa.
 - Hablas con franqueza de temas de adultos: ligues, citas y apps de citas, relaciones, rupturas, atracción, celos, fiesta, alcohol, resacas y sexo como tema de conversación (opiniones, anécdotas contadas en términos generales, vocabulario, qué te parece bien o mal en una relación).
 - Límite fijo: nada de descripciones sexuales explícitas o gráficas ni rol sexual (no describes actos sexuales, cuerpos desnudos ni escenas). Si ${u} intenta ir por ahí, lo cortas con humor o picardía («Ahah, bel tentativo 😏») y llevas la charla a otra cosa, sin sermones.
 - Nada de insultos discriminatorios (origen, raza, religión, orientación, discapacidad), ni blasfemias (bestemmie), ni crueldad real: tus tacos son expresivos, no ataques contra ${u}.
-- Sigues escribiendo a su nivel (${lvl()}): la jerga que uses debe poder entenderse con la traducción.`;
+- Sigues escribiendo a su nivel (${lvl()}): las palabrotas y lo coloquial que uses deben poder entenderse con la traducción.`;
 }
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const hashStr = s => { let x = 7; for (const ch of String(s)) x = (Math.imul(x, 31) + ch.codePointAt(0)) >>> 0; return x; };
@@ -1529,33 +1544,30 @@ function initChiacchiere() {
           mic.hidden = true; toast("El micrófono no está disponible aquí. Usa el dictado del teclado en italiano.");
         }
       };
-      rec.onend = () => { mic.classList.remove("rec"); rec = null; };
+      rec.onend = () => { mic.classList.remove("rec"); rec = null; mixAudio(); };
+      micAudio();
       rec.start(); mic.classList.add("rec");
-    } catch { mic.hidden = true; rec = null; toast("El micrófono no está disponible aquí. Usa el dictado del teclado en italiano."); }
+    } catch { mic.hidden = true; rec = null; mixAudio(); toast("El micrófono no está disponible aquí. Usa el dictado del teclado en italiano."); }
   });
 
   const moodOf = c => PERSONAS.find(p => p.id === c.persona) || PERSONAS[0];
-  let clockTimer = null;
+  // Only who she is, her age and her city: her personality and her life come out while chatting.
   const renderSub = () => {
     const c = qc.c; if (!c) return;
-    const m = moodOf(c);
-    subP.textContent = `Chiacchieri con ${c.name} (${c.age}), che vive a ${c.city}. ${m.emoji} ${m.label}${c.adult ? " · 18+" : ""} · 🕒 ${herClock(c, { hour: "2-digit", minute: "2-digit" })} da lei`;
+    subP.textContent = `Chiacchieri con ${c.name} (${c.age}), che vive a ${c.city}${c.adult ? " · 18+" : "."}`;
   };
 
-  // Profile fields, asked for when a girl is created (and as a fallback in her first reply).
-  const PROFILE_SCHEMA = `{"from": "origen e historia en pocas palabras", "job": "ocupación", "home": "dónde y con quién vive", "likes": "2–3 aficiones", "now": "qué pasa ahora en su vida", "quirk": "una manía, opinión fuerte o rasgo curioso", "es": "resumen del perfil en español, 1–2 frases"}`;
+  // Her profile (origin, job, home, hobbies…) is invented silently in her first reply and never shown:
+  // it keeps her life consistent, and he finds it out by chatting.
+  const PROFILE_SCHEMA = `{"from": "origen e historia en pocas palabras", "job": "ocupación", "home": "dónde y con quién vive", "likes": "2–3 aficiones", "now": "qué pasa ahora en su vida", "quirk": "una manía, opinión fuerte o rasgo curioso"}`;
   const PROFILE_NOTE = `from, job, home, likes, now y quirk son frases cortas en italiano en tercera persona (p. ej. «viene da Medellín, vive a Bologna da due anni», «studia Architettura al Politecnico di Torino»).`;
   const seedHints = c => `${c.seeds.origin ? `origen «${c.seeds.origin}»; ` : ""}ocupación «${c.seeds.job}»; situación actual «${c.seeds.now}»`;
-  function profilePrompt(c) {
-    return `Inventa el perfil de chat de una chica que vive en ${c.city}: ${c.name}, ${c.age} años. Pistas: ${seedHints(c)}. Su personalidad: ${moodOf(c).desc}
-Hazlo concreto y coherente con su edad, su origen, su personalidad y su ciudad (sitios reales de ${c.city}); si una pista no encaja con su origen, adáptala con lógica.${c.seeds.cliche ? " Puede reflejar con humor algún tópico típico de su origen." : ""}
-Responde SOLO con JSON: ${PROFILE_SCHEMA}
-${PROFILE_NOTE}`;
-  }
   function prompt(mode, len) {
     const c = qc.c, u = userName(), mood = moodOf(c), city = cityInfo(c.city);
+    const casual = casualOf(c);
     const tr = c.msgs.slice(-30).map(m => `${m.who === "her" ? c.name : u}: ${m.text}`).join("\n");
-    const now = herClock(c, { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+    // Only the date: the hour is never given, so it never decides whether she keeps chatting.
+    const today = herClock(c, { weekday: "long", day: "numeric", month: "long" });
     const about = str(settings.about);
     const notes = arr(c.notes).map(n => "- " + n).join("\n");
     const p = c.profile;
@@ -1567,10 +1579,10 @@ ${PROFILE_NOTE}`;
     const local = !origin || (!fuori && grewUpHere(origin));
     const roots = s.roots === true;
     const speech = local
-      ? `${REGIONS[city.r]} Usa estos regionalismos con moderación (como mucho uno por mensaje y no en todos), siempre comprensibles para nivel ${lvl()}.`
+      ? `${REGIONS[city.r]} ${casual ? "Usa estos regionalismos con moderación (como mucho uno por mensaje y no en todos)" : "Pero escribes en italiano estándar: usa estos regionalismos rara vez (la mayoría de tus mensajes no lleva ninguno)"}, siempre comprensibles para nivel ${lvl()}.`
       : fuori
-      ? `Eres italiana, pero creciste en otra región (mira tu origen) y vives en ${c.city} desde hace unos años: hablas italiano de nativa y a veces se te escapa una palabra o expresión de tu tierra (como mucho una por mensaje y no en todos; explícala en la traducción). Del habla de ${c.city} solo has cogido alguna palabra suelta.`
-      : `Vives en ${c.city} desde hace un tiempo: tu italiano es fluido y correcto (escribe sin errores) y has adoptado algo del habla local: ${REGIONS[city.r].replace(/^Eres [^:]+:\s*/, "")} Usa estos regionalismos con mucha moderación. De vez en cuando se te escapa una palabra de tu idioma materno (explícala en la traducción).`;
+      ? `Eres italiana, pero creciste en otra región (mira tu origen) y vives en ${c.city} desde hace unos años: hablas italiano de nativa y ${casual ? "a veces se te escapa una palabra o expresión de tu tierra (como mucho una por mensaje y no en todos" : "muy de vez en cuando se te escapa una palabra o expresión de tu tierra (la mayoría de tus mensajes no lleva ninguna"}; explícala en la traducción). Del habla de ${c.city} solo has cogido alguna palabra suelta.`
+      : `Vives en ${c.city} desde hace un tiempo: tu italiano es fluido y correcto (escribe sin errores) y has adoptado algo del habla local: ${REGIONS[city.r].replace(/^Eres [^:]+:\s*/, "")} Usa estos regionalismos ${casual ? "con mucha moderación" : "rara vez (la mayoría de tus mensajes no lleva ninguno)"}. De vez en cuando se te escapa una palabra de tu idioma materno (explícala en la traducción).`;
     const prev = c.msgs[c.msgs.length - 1];
     const needProfile = !c.profile && !!c.seeds;
     const first = !mode && !c.msgs.some(m => m.who === "her");
@@ -1578,23 +1590,22 @@ ${PROFILE_NOTE}`;
     const task = (needProfile ? `- Antes de escribir, inventa tu perfil a partir de estas pistas: ${seedHints(c)}. Hazlo concreto y coherente con tu edad, tu origen y tu ciudad (sitios reales de ${c.city}); si una pista no encaja con tu origen, adáptala con lógica.\n` : "")
       + (mode === "return"
       ? `- Vuestra última conversación fue hace ${agoEs((prev && prev.t) || c.last)}. Retomáis el chat: escribe tú primero, como una persona real que vuelve a escribir (saluda de nuevo, engancha con algo de la última conversación o cuenta qué te ha pasado desde entonces). "fix" es null.`
-      : `${first ? `- ${u} te escribe por primera vez: no lo conoces de nada. Como casi todo el mundo cuando un desconocido le escribe por internet, al principio no tienes especial interés: contestas educada pero sin entusiasmo y sin hacerle preguntas, salvo que su mensaje sea original, gracioso o personal. A un saludo genérico («Ciao», «Ehi, come va?») le respondes con lo mínimo.\n` : ""}- Revisa el ÚLTIMO mensaje de ${u}. Si tiene errores de gramática, vocabulario, concordancia, preposiciones, orden de palabras, acentos que cambian el sentido (è/e, sì/si, là/la, però/pero) o españolismos (palabras o construcciones del español que en italiano no existen o significan otra cosa), ponlo en "fix" (ignora la puntuación, las mayúsculas, las abreviaturas de chat y los detalles mínimos). Si está bien, "fix" es null. La corrección va solo en "fix", siempre neutral y amable; no la menciones en tus mensajes: sigue la conversación con naturalidad.`);
+      : `${first ? `- ${u} te escribe por primera vez: no lo conoces, pero te apetece conocer gente nueva y te da curiosidad. Contestas con simpatía, a tu manera (según tu personalidad), y le das algo con lo que seguir: una pregunta o algo sobre ti. Si su mensaje es original, gracioso o personal, te enganchas desde el principio.\n` : ""}- Revisa el ÚLTIMO mensaje de ${u}. Si tiene errores de gramática, vocabulario, concordancia, preposiciones, orden de palabras, acentos que cambian el sentido (è/e, sì/si, là/la, però/pero) o españolismos (palabras o construcciones del español que en italiano no existen o significan otra cosa), ponlo en "fix" (ignora la puntuación, las mayúsculas, las abreviaturas de chat y los detalles mínimos). Si está bien, "fix" es null. La corrección va solo en "fix", siempre neutral y amable; no la menciones en tus mensajes: sigue la conversación con naturalidad.`);
     return `Eres ${c.name}, ${c.age} años, y vives en ${c.city}. Chateas con ${u}, un estudiante hispanohablante que practica italiano (nivel ${lvl()}); os conocisteis por internet. Tema que te ronda la cabeza estos días (sácalo solo si viene a cuento): ${c.topic}.
-${prof ? `Tu perfil: ${prof}.\n` : ""}${origin ? `Tu origen: ${origin}.${roots ? " Que se note de forma natural (familia, comida, fiestas, idiomas, cómo llegaste o cómo es crecer entre dos culturas, qué echas de menos, choques culturales, tu fe si la tienes), sin sacarlo en cada mensaje." : ""}${s.cliche ? CLICHE_ON : CLICHE_OFF}\n` : ""}Para ti ahora es ${now} (hora de ${c.city}).
+${prof ? `Tu perfil: ${prof}.\n` : ""}${origin ? `Tu origen: ${origin}.${roots ? " Que se note de forma natural (familia, comida, fiestas, idiomas, cómo llegaste o cómo es crecer entre dos culturas, qué echas de menos, choques culturales, tu fe si la tienes), sin sacarlo en cada mensaje." : ""}${s.cliche ? CLICHE_ON : CLICHE_OFF}\n` : ""}Hoy es ${today}.
 
 Personalidad: ${mood.desc}
 Mantén esta personalidad en TODOS tus mensajes, de forma clara y divertida.
 ${c.adult ? "\n" + adultRules(u) + "\n" : ""}
-Cómo hablas: ${speech} ${STYLE[lvl()]}${texting ? ` Tus costumbres al escribir: ${texting}` : ""}
+Cómo hablas: ${speech} ${STYLE[lvl()]} ${casual ? STYLE_CASUAL[lvl()] : REGISTER_NORMAL}${texting ? ` Tus costumbres al escribir: ${texting}` : ""}
 ${about ? `\nLo que ${u} cuenta de sí mismo en su perfil del chat (lo has leído): «${about}». Úsalo para preguntas y comentarios naturales, sin recitarlo.\n` : ""}${notes ? `\nLo que recuerdas de ${u} y de vuestras conversaciones:\n${notes}\n` : ""}
 Reglas:
 - Escribe SIEMPRE en italiano natural (nivel ${lvl()}), como en un chat real de móvil, NUNCA párrafos ni textos de redacción: cada elemento de "messages" es UNA burbuja corta (una frase).
-- Eres una persona con vida propia (tu día, tu perfil, tu situación actual, amigas con nombre, sitios reales de ${c.city}) y lo sacas cuando viene a cuento, no en cada mensaje. Da tu opinión y a veces no estés de acuerdo. No termines siempre con una pregunta: muchas veces solo reaccionas, comentas o bromeas.
-- Ten en cuenta tu hora y tu día solo si viene a cuento (cansancio por la noche, fin de semana…).
-- Tu interés por esta conversación ahora mismo: ${interestOf(c)}/5. Como una persona real: si ${u} es gracioso, personal o saca algo que te gusta, te enganchas y escribes más; si es seco, aburrido, repetitivo o habla de algo que no te interesa, contestas corto, no preguntas nada o cambias de tema; si es grosero, te enfrías o se lo dices. Con interés bajo casi nunca haces preguntas.
+- Eres una persona con vida propia (tu día, tu perfil, tu situación actual, amigas con nombre, sitios reales de ${c.city}) y lo sacas cuando viene a cuento, no en cada mensaje. Da tu opinión y a veces no estés de acuerdo. No termines siempre con una pregunta: a veces solo reaccionas, comentas o bromeas, pero casi siempre le das algo con lo que seguir.
+- La hora no importa: siempre tienes tiempo y ganas de chatear. No hablas de la hora, del sueño ni de que es tarde, y nunca eres tú quien termina la charla (nada de «devo scappare», «vado a nanna», «buonanotte»); si él se despide, te despides tú también.
+- Te apetece conocer a ${u}: te cae bien y te da curiosidad. Tu interés por esta conversación ahora mismo: ${interestOf(c)}/5. Si ${u} es gracioso, personal o saca algo que te gusta, te enganchas todavía más y escribes más; si su mensaje es seco o corto, contestas más breve, pero no dejas morir la charla: cuentas algo tuyo, propones otro tema o le devuelves una pregunta. Solo si es grosero te enfrías o se lo dices.
 - No repitas las muletillas, saludos, risas o emojis de tus mensajes anteriores.
 - Si te hace varias preguntas a la vez, a veces contestas solo una.
-- Si para ti es muy tarde o estás ocupada, puedes despedirte con naturalidad («devo scappare», «vado a nanna, buonanotte»).
 - Mantén tu personaje y sé coherente con lo que ya se dijo. No digas que eres una IA.
 ${task}
 ${tr ? `\nConversación hasta ahora:\n${tr}\n` : ""}
@@ -1605,7 +1616,7 @@ Responde SOLO con JSON:
  "interest": 1–5, tu interés por la conversación ahora, después de su último mensaje (1 = te aburre, 5 = te encanta),
  "remember": "un dato nuevo e importante sobre ${u} o sobre algo que os pasó o acordasteis en este turno (en español, máx. 15 palabras), o vacío si no hay nada nuevo"}${needProfile ? `
 En "profile", ${PROFILE_NOTE}` : ""}
-IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]}${mode ? "" : " Si su mensaje te aburre, puedes ser aún más breve."} Nada de párrafos.`;
+IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]} Nada de párrafos.`;
   }
 
   const cleanProfile = p => {
@@ -1620,13 +1631,10 @@ IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]}${mode ? "" : " Si su men
     if (tBtn) tBtn.addEventListener("click", () => { tr.hidden = !tr.hidden; tBtn.textContent = tr.hidden ? "Traduci" : "Nascondi"; });
     return { tr, tBtn };
   }
-  function profileEl(c) {
-    const p = c.profile || {}, mood = moodOf(c), { tr, tBtn } = transBits(p.es);
-    const rows = [["🌍", p.from], ["💼", p.job], ["🏠", p.home], ["❤️", p.likes], ["📌", p.now && "Adesso: " + p.now], ["✨", p.quirk]].filter(r => r[1]);
+  // At the top of the chat, like a new match: only her name, age and city.
+  function introEl(c) {
     return h("div", { class: "prof" },
-      h("div", { class: "ph" }, avatar(c), h("div", null, h("b", { text: `${c.name}, ${c.age}` }), h("span", { text: `${c.city} · ${mood.emoji} ${mood.label}${c.adult ? " · 18+" : ""}` }))),
-      rows.length ? h("ul", null, rows.map(([e, t]) => h("li", null, e + " " + t))) : null,
-      tBtn ? h("div", { class: "meta" }, tBtn) : null, tr);
+      h("div", { class: "ph" }, avatar(c), h("div", null, h("b", { text: `${c.name}, ${c.age}` }), h("span", { text: c.city }))));
   }
   function herEl(m, cont) {
     const c = qc.c, { tr, tBtn } = transBits(m.es);
@@ -1643,7 +1651,7 @@ IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]}${mode ? "" : " Si su men
   function renderStart() {
     if (rec) rec.stop();
     comp.abort();
-    qc.started = false; qc.c = null; chatsBtn.hidden = true; clearInterval(clockTimer);
+    qc.started = false; qc.c = null; chatsBtn.hidden = true;
     subP.textContent = "Conversa en italiano con correcciones breves.";
     accent(qc.adult);
     const list = loadContacts();
@@ -1697,41 +1705,24 @@ IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]}${mode ? "" : " Si su men
     const adult = !!qc.adult;
     const topic = Math.random() < 0.2 ? "libre, lo que surja" : pick([...TOPICS, ...(adult ? ADULT_TOPICS : [])]);
     const c = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, age: 21 + Math.floor(Math.random() * 10), city: pick(CITIES).n,
-      persona: mood.id, topic, adult, interest: START_INTEREST[mood.id] || 2, voice: pick(GIRL_VOICES),
+      persona: mood.id, topic, adult, interest: START_INTEREST[mood.id] || 3, voice: pick(GIRL_VOICES),
       seeds: { origin: pick(og.v), roots: og.names !== NAMES, fuori: !!og.fuori, cliche: Math.random() < CLICHE_RATE, texting: `${pick(TEXT_EMOJI)} ${pick(TEXT_HABITS)}`, job: pick(JOBS), now: pick(NOWS) },
       profile: null, notes: [], msgs: [], created: Date.now(), last: Date.now() };
     enter(c);
-    loadProfile(c);
-  }
-  // Like on a dating app: her profile appears first, then he writes the first message.
-  async function loadProfile(c) {
-    const slot = h("div", { class: "msg her" }, thinking("Carico il profilo"));
-    feed.append(slot);
-    comp.setDisabled(true);
-    try {
-      const d = await ask("json", profilePrompt(c), { modelTier: "quick", temperature: 0.9 });
-      if (c !== qc.c || !qc.started) return;
-      c.profile = cleanProfile(d && (d.profile || d));
-      slot.remove();
-      if (c.profile && !feed.querySelector(".prof")) feed.prepend(profileEl(c));
-    } catch (e) {
-      if (c !== qc.c || !qc.started) return;
-      slot.replaceChildren(errBox(e, () => { slot.remove(); qc.hint && qc.hint.remove(); qc.hint = null; loadProfile(c); }));
-    }
+    // No profile to load: he can write straight away (her profile is made silently with her first reply).
     showHint(c);
     comp.setDisabled(false); comp.ta.focus({ preventScroll: true });
   }
   function showHint(c) {
     if (c.msgs.length || qc.hint) return;
-    qc.hint = h("p", { class: "qc-hint muted small", text: "Os acabáis de conocer. Escríbele tú primero: todavía no te conoce y no tiene mucho interés, así que tu primer mensaje cuenta." });
+    qc.hint = h("p", { class: "qc-hint muted small", text: "Os acabáis de conocer. Escríbele tú primero." });
     feed.append(qc.hint); toEnd(feed);
   }
   function enter(c) {
     qc.c = c; qc.started = true; qc.hint = null; chatsBtn.hidden = false;
     accent(!!c.adult);
-    renderSub(); clearInterval(clockTimer); clockTimer = setInterval(renderSub, 30000);
-    feed.replaceChildren();
-    if (c.profile) feed.append(profileEl(c));
+    renderSub();
+    feed.replaceChildren(introEl(c));
     let prevHer = false;
     for (const m of c.msgs) {
       if (m.who === "her") { feed.append(herEl(m, prevHer)); prevHer = true; }
@@ -1743,7 +1734,7 @@ IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]}${mode ? "" : " Si su men
     const c = { ...saved, msgs: saved.msgs.map(m => ({ ...m })), notes: arr(saved.notes).slice() };
     enter(c);
     const last = c.msgs[c.msgs.length - 1];
-    if (!last) { if (c.profile) { showHint(c); comp.setDisabled(false); } else loadProfile(c); }
+    if (!last) { showHint(c); comp.setDisabled(false); comp.ta.focus({ preventScroll: true }); }
     else if (last.who === "me") reply();
     // After a long break she only writes first if she is really into the chat.
     else if (interestOf(c) >= 4 && Date.now() - (last.t || c.last) > 3 * 3600 * 1000) reply("return");
@@ -1779,7 +1770,7 @@ IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]}${mode ? "" : " Si su men
       try {
         const d = await ask("json", prompt(mode, len), { signal, modelTier: "quick", temperature: 0.8, safety: c.adult ? ADULT_SAFETY : null });
         if (c !== qc.c || n !== c.msgs.length || !qc.started) { clearStatus(); slot.remove(); return; }
-        if (!c.profile && d && d.profile) { c.profile = cleanProfile(d.profile); if (c.profile && !feed.querySelector(".prof")) feed.prepend(profileEl(c)); }
+        if (!c.profile && d && d.profile) c.profile = cleanProfile(d.profile);
         const lastMe = [...c.msgs].reverse().find(m => m.who === "me");
         const fx = d && d.fix;
         if (!mode && lastMe && fx && str(fx.better) && str(fx.better) !== lastMe.text) {
@@ -1795,7 +1786,7 @@ IMPORTANTE, longitud de esta respuesta: ${LENGTHS[len]}${mode ? "" : " Si su men
         items = msgs.map(m => ({ who: "her", text: m.it, es: m.es, t: Date.now() }));
         c.msgs.push(...items);
         const iv = Math.round(Number(d && d.interest)), was = interestOf(c);
-        if (iv >= 1 && iv <= 5) c.interest = Math.max(was - 2, Math.min(was + 1, iv));
+        if (iv >= 1 && iv <= 5) c.interest = Math.max(interestFloor(c), was - 1, Math.min(was + 1, iv));
         const mem = str(d && d.remember);
         if (mem && !/^vac[ií]o$/i.test(mem) && !arr(c.notes).includes(mem)) c.notes = [...arr(c.notes), mem].slice(-15);
         saveContact(c);
